@@ -35,13 +35,16 @@ const ExamEdit = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [courses, setCourses] = useState([]);
+  const [questionTotal, setQuestionTotal] = useState(0);
+  const [questionPage, setQuestionPage] = useState(1);
+  const [questionPageSize, setQuestionPageSize] = useState(10);
   const questionType = Form.useWatch('type', questionForm);
 
   const fetchData = async () => {
     if (isNew) {
       try {
-        const res = await getCourses();
-        setCourses(res.data || []);
+        const res = await getCourses({ page: 1, page_size: 100 });
+        setCourses(res.data.items || []);
       } catch (error) {
         message.error('加载课程列表失败');
       }
@@ -51,10 +54,11 @@ const ExamEdit = () => {
     try {
       const [examRes, questionsRes] = await Promise.all([
         getExam(examId),
-        getExamQuestions(examId),
+        getExamQuestions(examId, { page: questionPage, page_size: questionPageSize }),
       ]);
       const examData = examRes.data;
-      setQuestions(questionsRes.data || []);
+      setQuestions(questionsRes.data.items || []);
+      setQuestionTotal(questionsRes.data.total || 0);
       examForm.setFieldsValue({
         title: examData.title,
         description: examData.description,
@@ -76,7 +80,7 @@ const ExamEdit = () => {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [examId]);
+  }, [examId, questionPage, questionPageSize]);
 
   const handleSaveExam = async () => {
     try {
@@ -134,7 +138,7 @@ const ExamEdit = () => {
         content: values.content,
         answer: values.answer,
         score: values.score,
-        sort_order: questions.length + 1,
+        sort_order: questionTotal + 1,
         options: ['single', 'multiple'].includes(values.type) ? (values.options || []) : null,
       };
       await createQuestion(examId, payload);
@@ -259,14 +263,26 @@ const ExamEdit = () => {
       {!isNew && (
         <Card
           loading={loading}
-          title={`题目管理（${questions.length}）`}
+          title={`题目管理（${questionTotal}）`}
           extra={
             <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
               添加题目
             </Button>
           }
         >
-          <Table columns={questionColumns} dataSource={questions} rowKey="id" pagination={false} />
+          <Table
+            columns={questionColumns}
+            dataSource={questions}
+            rowKey="id"
+            pagination={{
+              current: questionPage,
+              pageSize: questionPageSize,
+              total: questionTotal,
+              showSizeChanger: true,
+              showTotal: (t) => `共 ${t} 条`,
+              onChange: (p, ps) => { setQuestionPage(p); setQuestionPageSize(ps); },
+            }}
+          />
         </Card>
       )}
 
