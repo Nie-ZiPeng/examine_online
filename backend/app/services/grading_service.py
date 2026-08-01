@@ -1,15 +1,48 @@
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.exam_record import ExamRecord
 from app.models.question import Question
 from app.models.answer import Answer
+from app.models.user import User
 
-async def get_exam_records(db: AsyncSession, exam_id: int):
-    result = await db.execute(
-        select(ExamRecord).where(ExamRecord.exam_id == exam_id)
-    )
-    return result.scalars().all()
+async def get_exam_records(db: AsyncSession, exam_id: int, page: int = 1, page_size: int = 10):
+    query = select(ExamRecord).where(ExamRecord.exam_id == exam_id).order_by(ExamRecord.submit_time.desc())
+    count_query = select(func.count()).select_from(query.subquery())
+    total = (await db.execute(count_query)).scalar_one()
+    result = await db.execute(query.offset((page - 1) * page_size).limit(page_size))
+    records = result.scalars().all()
+
+    student_ids = [r.student_id for r in records]
+    students = {}
+    if student_ids:
+        res = await db.execute(select(User).where(User.id.in_(student_ids)))
+        students = {u.id: u for u in res.scalars().all()}
+
+    items = []
+    for r in records:
+        s = students.get(r.student_id)
+        items.append({
+            "id": r.id,
+            "student_id": r.student_id,
+            "exam_id": r.exam_id,
+            "score": r.score,
+            "status": r.status,
+            "switch_count": r.switch_count,
+            "start_time": r.start_time,
+            "submit_time": r.submit_time,
+            "student": {
+                "id": s.id,
+                "username": s.username,
+                "role": s.role,
+                "name": s.name,
+                "email": s.email,
+                "phone": s.phone,
+                "is_active": s.is_active,
+                "created_at": s.created_at
+            } if s else None
+        })
+    return items, total
 
 async def get_record_answers(db: AsyncSession, record_id: int):
     result = await db.execute(

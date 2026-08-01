@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.answer import GradeRequest
 from app.services.grading_service import get_exam_records, get_record_answers, grade_answer, finalize_record
 from app.utils.deps import get_current_user, require_role
-from app.utils.response import success_response
+from app.utils.response import success_response, paginated_response
 from app.models.user import User
 
 router = APIRouter(tags=["阅卷管理"])
@@ -12,24 +12,13 @@ router = APIRouter(tags=["阅卷管理"])
 @router.get("/api/exams/{exam_id}/records")
 async def list_exam_records(
     exam_id: int,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
-    records = await get_exam_records(db, exam_id)
-    records_data = [
-        {
-            "id": r.id,
-            "student_id": r.student_id,
-            "exam_id": r.exam_id,
-            "score": r.score,
-            "status": r.status,
-            "switch_count": r.switch_count,
-            "start_time": r.start_time,
-            "submit_time": r.submit_time
-        }
-        for r in records
-    ]
-    return success_response(data=records_data)
+    records, total = await get_exam_records(db, exam_id, page, page_size)
+    return paginated_response(records, total, page, page_size)
 
 @router.get("/api/records/{record_id}/answers")
 async def list_record_answers(
