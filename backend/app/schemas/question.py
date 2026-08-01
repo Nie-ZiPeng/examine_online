@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from datetime import datetime
+import json
 
 class QuestionBase(BaseModel):
     type: str
@@ -25,6 +26,16 @@ class QuestionResponse(QuestionBase):
     id: int
     exam_id: int
     created_at: datetime
+
+    @field_validator("options", mode="before")
+    @classmethod
+    def parse_options(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except (ValueError, TypeError):
+                return None
+        return v
 
     class Config:
         from_attributes = True
