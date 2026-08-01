@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Descriptions, Tag, Spin, message } from 'antd';
-import { getRecordAnswers } from '../../../api/grading';
+import { Drawer, Descriptions, Tag, Spin, message, Button, Space, InputNumber, Switch } from 'antd';
+import {
+  SaveOutlined,
+  CheckSquareOutlined,
+  AuditOutlined,
+} from '@ant-design/icons';
+import { getRecordAnswers, gradeAnswer, finalizeRecord } from '../../../api/grading';
 
 const typeMap = {
   single: { color: 'blue', text: '单选题' },
@@ -18,6 +23,9 @@ const statusMap = {
 const GradingDrawer = ({ record, open, onClose, onChanged }) => {
   const [answers, setAnswers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [scores, setScores] = useState({});
+  const [correctness, setCorrectness] = useState({});
+  const [savingId, setSavingId] = useState(null);
 
   useEffect(() => {
     if (!open || !record) return;
@@ -26,6 +34,14 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
       try {
         const res = await getRecordAnswers(record.id);
         setAnswers(res.data || []);
+        const s = {};
+        const c = {};
+        (res.data || []).forEach((a) => {
+          s[a.id] = a.score ?? 0;
+          c[a.id] = a.is_correct === true;
+        });
+        setScores(s);
+        setCorrectness(c);
       } catch (error) {
         message.error('获取答题详情失败');
       } finally {
@@ -35,7 +51,64 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
     fetchAnswers();
   }, [open, record]);
 
-  const totalEarned = answers.reduce((sum, a) => sum + (a.score ?? 0), 0);
+  const handleSave = async (answer) => {
+    setSavingId(answer.id);
+    try {
+      await gradeAnswer(answer.id, {
+        score: scores[answer.id] ?? 0,
+        is_correct: correctness[answer.id],
+      });
+      message.success('已保存');
+      onChanged?.();
+    } catch (error) {
+      message.error('保存失败');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleAutoGrade = async () => {
+    const objective = answers.filter((a) =>
+      ['single', 'multiple', 'judge'].includes(a.question.type)
+    );
+    if (objective.length === 0) {
+      message.info('没有客观题');
+      return;
+    }
+    const nextScores = { ...scores };
+    const nextCorrect = { ...correctness };
+    objective.forEach((a) => {
+      const stu = (a.student_answer || '').trim().toUpperCase();
+      const ans = (a.question.answer || '').trim().toUpperCase();
+      const isCorrect = !!stu && stu === ans;
+      nextScores[a.id] = isCorrect ? a.question.score : 0;
+      nextCorrect[a.id] = isCorrect;
+    });
+    setScores(nextScores);
+    setCorrectness(nextCorrect);
+    for (const a of objective) {
+      try {
+        await gradeAnswer(a.id, { score: nextScores[a.id], is_correct: nextCorrect[a.id] });
+      } catch (e) {
+        // 单题失败不中断，继续其余题目
+      }
+    }
+    message.success(`已自动判分 ${objective.length} 道客观题`);
+    onChanged?.();
+  };
+
+  const handleFinalize = async () => {
+    try {
+      await finalizeRecord(record.id);
+      message.success('终评成功');
+      onChanged?.();
+      onClose();
+    } catch (error) {
+      message.error('终评失败');
+    }
+  };
+
+  const totalEarned = answers.reduce((sum, a) => sum + (scores[a.id] ?? 0), 0);
   const totalFull = answers.reduce((sum, a) => sum + (a.question?.score || 0), 0);
 
   return (
@@ -44,6 +117,16 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
       width={720}
       open={open}
       onClose={onClose}
+      extra={
+        <Space>
+          <Button icon={<CheckSquareOutlined />} onClick={handleAutoGrade}>
+            自动判分客观题
+          </Button>
+          <Button type="primary" icon={<AuditOutlined />} onClick={handleFinalize}>
+            终评
+          </Button>
+        </Space>
+      }
     >
       <Spin spinning={loading}>
         {record && (
@@ -83,6 +166,34 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
                 <p style={{ marginBottom: 0 }}>
                   <strong>学生答案：</strong>{a.student_answer || '（未作答）'}
                 </p>
+                <Space align="center" style={{ marginTop: 12 }}>
+                  {['single', 'multiple', 'judge'].includes(a.question.type) && (
+                    <>
+                      <span>正确</span>
+                      <Switch
+                        checked={correctness[a.id]}
+                        onChange={(v) => setCorrectness((p) => ({ ...p, [a.id]: v }))}
+                      />
+                    </>
+                  )}
+                  <span>得分</span>
+                  <InputNumber
+                    min={0}
+                    max={a.question.score}
+                    value={scores[a.id]}
+                    onChange={(v) => setScores((p) => ({ ...p, [a.id]: v ?? 0 }))}
+                  />
+                  <span>/ {a.question.score}</span>
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<SaveOutlined />}
+                    loading={savingId === a.id}
+                    onClick={() => handleSave(a)}
+                  >
+                    保存
+                  </Button>
+                </Space>
               </div>
             ))}
             {answers.length === 0 && <div>该记录暂无答案</div>}
