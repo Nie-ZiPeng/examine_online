@@ -6,14 +6,18 @@ import { getExams, deleteExam, publishExam } from '../../../api/exams';
 
 const ExamManage = () => {
   const [exams, setExams] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const fetchExams = async () => {
+  const fetchExams = async (p, ps) => {
     setLoading(true);
     try {
-      const res = await getExams();
-      setExams(res.data);
+      const res = await getExams({ page: p, page_size: ps });
+      setExams(res.data.items || []);
+      setTotal(res.data.total || 0);
     } catch (error) {
       message.error('获取考试列表失败');
     } finally {
@@ -22,14 +26,15 @@ const ExamManage = () => {
   };
 
   useEffect(() => {
-    fetchExams();
-  }, []);
+    fetchExams(page, pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]);
 
   const handleDelete = async (id) => {
     try {
       await deleteExam(id);
       message.success('删除成功');
-      fetchExams();
+      fetchExams(page, pageSize);
     } catch (error) {
       message.error('删除失败');
     }
@@ -39,7 +44,7 @@ const ExamManage = () => {
     try {
       await publishExam(id);
       message.success('发布成功');
-      fetchExams();
+      fetchExams(page, pageSize);
     } catch (error) {
       message.error('发布失败');
     }
@@ -70,6 +75,9 @@ const ExamManage = () => {
       key: 'action',
       render: (_, record) => (
         <Space>
+          <Button type="link" icon={<SendOutlined />} onClick={() => navigate(`/grading?examId=${record.id}`)}>
+            阅卷
+          </Button>
           <Button type="link" icon={<EditOutlined />} onClick={() => navigate(`/exams/${record.id}/edit`)}>
             编辑
           </Button>
@@ -93,7 +101,20 @@ const ExamManage = () => {
       <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/exams/new')} style={{ marginBottom: 16 }}>
         创建考试
       </Button>
-      <Table columns={columns} dataSource={exams} loading={loading} rowKey="id" />
+      <Table
+        columns={columns}
+        dataSource={exams}
+        loading={loading}
+        rowKey="id"
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          showTotal: (t) => `共 ${t} 条`,
+          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+        }}
+      />
     </div>
   );
 };

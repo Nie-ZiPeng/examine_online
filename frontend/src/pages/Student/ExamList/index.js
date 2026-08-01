@@ -5,6 +5,9 @@ import { getExams, startExam } from '../../../api/exams';
 
 const ExamList = () => {
   const [exams, setExams] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -17,11 +20,12 @@ const ExamList = () => {
     }
   };
 
-  const fetchExams = async () => {
+  const fetchExams = async (p, ps) => {
     setLoading(true);
     try {
-      const res = await getExams({ status: 'published' });
-      setExams(res.data);
+      const res = await getExams({ status: 'published', page: p, page_size: ps });
+      setExams(res.data.items || []);
+      setTotal(res.data.total || 0);
     } catch (error) {
       message.error('获取考试列表失败');
     } finally {
@@ -30,8 +34,9 @@ const ExamList = () => {
   };
 
   useEffect(() => {
-    fetchExams();
-  }, []);
+    fetchExams(page, pageSize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]);
 
   const columns = [
     { title: '考试标题', dataIndex: 'title', key: 'title' },
@@ -56,7 +61,22 @@ const ExamList = () => {
     },
   ];
 
-  return <Table columns={columns} dataSource={exams} loading={loading} rowKey="id" />;
+  return (
+    <Table
+      columns={columns}
+      dataSource={exams}
+      loading={loading}
+      rowKey="id"
+      pagination={{
+        current: page,
+        pageSize,
+        total,
+        showSizeChanger: true,
+        showTotal: (t) => `共 ${t} 条`,
+        onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+      }}
+    />
+  );
 };
 
 export default ExamList;
