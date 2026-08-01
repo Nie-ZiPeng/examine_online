@@ -139,7 +139,7 @@ export const finalizeRecord = (recordId) => axios.put(`/api/records/${recordId}/
 
 ## 8. 视觉风格（统一主题色 + 轻微卡片化）
 
-- **全局主题色**：`App.js` 的 `ConfigProvider` 增加 `theme={{ token: { colorPrimary: '#2563EB', borderRadius: 6 } }}`（专业蓝，全局生效，现有页面自动统一）。
+- **全局主题色**：低饱和商务蓝 / 藏青系。`App.js` 的 `ConfigProvider` 增加 `theme={{ token: { colorPrimary: '#3D5A80', borderRadius: 6 } }}`（藏青蓝，全局生效，现有页面自动统一）。
 - **新页面**用 `Card` 包裹（标题 + 说明），保持与 Content 白卡一致的间距，Table 默认质感、行 hover 高亮。
 - 交互语言与现有页面一致（Table / Modal / Tag / Drawer / Popconfirm / message），不做花哨动效。
 
@@ -162,6 +162,6 @@ export const finalizeRecord = (recordId) => axios.put(`/api/records/${recordId}/
 
 ---
 
-**文档版本**: v1.0
+**文档版本**: v1.1
 **创建日期**: 2026-08-02
 **最后更新**: 2026-08-02
