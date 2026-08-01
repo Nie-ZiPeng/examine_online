@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.services.exam_student_service import start_exam, get_paper, save_answers, submit_exam
+from app.services.anti_cheat_service import record_switch, get_switch_status
 from app.utils.deps import get_current_user, require_role
 from app.utils.response import success_response, error_response
 from app.models.user import User
@@ -52,3 +53,25 @@ async def submit_exam_action(
     if error:
         return error_response(message=error)
     return success_response(data={"score": record.score})
+
+@router.post("/api/exams/{exam_id}/switch")
+async def record_switch_action(
+    exam_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(["student"]))
+):
+    data, error = await record_switch(db, exam_id, current_user.id)
+    if error:
+        return error_response(message=error)
+    return success_response(data=data)
+
+@router.get("/api/exams/{exam_id}/switch-status")
+async def get_switch_status_action(
+    exam_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(["student"]))
+):
+    data = await get_switch_status(db, exam_id, current_user.id)
+    if not data:
+        return error_response(message="考试不存在")
+    return success_response(data=data)
