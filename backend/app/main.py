@@ -6,6 +6,7 @@ from app.models import *  # noqa: F403
 from app.api.auth import router as auth_router
 from app.api.users import router as users_router
 from app.api.courses import router as courses_router
+from app.api.exams import router as exams_router
 
 app = FastAPI(title="在线考试系统", version="1.0.0")
 
@@ -20,6 +21,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(courses_router)
+app.include_router(exams_router)
 
 @app.on_event("startup")
 async def startup():
