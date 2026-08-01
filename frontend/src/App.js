@@ -41,7 +41,10 @@ function App() {
   }, [token, fetchUser]);
 
   return (
-    <ConfigProvider locale={zhCN}>
+    <ConfigProvider
+      locale={zhCN}
+      theme={{ token: { colorPrimary: '#3D5A80', borderRadius: 6 } }}
+    >
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
