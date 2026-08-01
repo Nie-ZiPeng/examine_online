@@ -26,8 +26,8 @@ async def start_exam(db: AsyncSession, exam_id: int, student_id: int):
     if existing_record and existing_record.status == "ongoing":
         return existing_record, None
     
-    if existing_record and existing_record.status == "submitted":
-        return None, "已提交过该考试"
+    if existing_record:
+        return None, "已参加过该考试"
     
     # 创建考试记录
     record = ExamRecord(
@@ -62,6 +62,28 @@ async def start_exam(db: AsyncSession, exam_id: int, student_id: int):
     )
     
     return record, None
+
+async def get_my_records(db: AsyncSession, student_id: int):
+    result = await db.execute(
+        select(ExamRecord, Exam)
+        .join(Exam, Exam.id == ExamRecord.exam_id)
+        .where(ExamRecord.student_id == student_id)
+        .order_by(ExamRecord.start_time.desc())
+    )
+    rows = result.all()
+    return [
+        {
+            "id": r.id,
+            "exam_id": r.exam_id,
+            "exam_title": exam.title,
+            "score": r.score,
+            "status": r.status,
+            "switch_count": r.switch_count,
+            "start_time": r.start_time,
+            "submit_time": r.submit_time
+        }
+        for r, exam in rows
+    ]
 
 async def get_paper(db: AsyncSession, exam_id: int, student_id: int):
     # 从Redis获取缓存的试卷
