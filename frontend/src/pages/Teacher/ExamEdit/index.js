@@ -7,8 +7,9 @@ import { ArrowLeftOutlined, PlusOutlined, DeleteOutlined, MinusCircleOutlined, S
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import {
-  getExam, updateExam, getExamQuestions, createQuestion, deleteQuestion,
+  getExam, createExam, updateExam, getExamQuestions, createQuestion, deleteQuestion,
 } from '../../../api/exams';
+import { getCourses } from '../../../api/courses';
 
 const { TextArea } = Input;
 
@@ -24,6 +25,7 @@ const optionLetters = (index) => String.fromCharCode(65 + index);
 
 const ExamEdit = () => {
   const { examId } = useParams();
+  const isNew = examId === 'new';
   const navigate = useNavigate();
   const [examForm] = Form.useForm();
   const [questionForm] = Form.useForm();
@@ -32,9 +34,19 @@ const ExamEdit = () => {
   const [saving, setSaving] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [courses, setCourses] = useState([]);
   const questionType = Form.useWatch('type', questionForm);
 
   const fetchData = async () => {
+    if (isNew) {
+      try {
+        const res = await getCourses();
+        setCourses(res.data || []);
+      } catch (error) {
+        message.error('加载课程列表失败');
+      }
+      return;
+    }
     setLoading(true);
     try {
       const [examRes, questionsRes] = await Promise.all([
@@ -81,6 +93,12 @@ const ExamEdit = () => {
         random_order: values.random_order,
         max_switch: values.max_switch,
       };
+      if (isNew) {
+        const created = await createExam({ ...payload, course_id: values.course_id });
+        message.success('考试创建成功');
+        navigate(`/exams/${created.data.id}/edit`);
+        return;
+      }
       await updateExam(examId, payload);
       message.success('考试信息保存成功');
       fetchData();
@@ -169,7 +187,7 @@ const ExamEdit = () => {
           返回列表
         </Button>
         <Button type="primary" icon={<SaveOutlined />} loading={saving} onClick={handleSaveExam}>
-          保存考试信息
+          {isNew ? '创建考试' : '保存考试信息'}
         </Button>
       </Space>
 
@@ -186,6 +204,19 @@ const ExamEdit = () => {
                 <Input placeholder="请输入考试说明" />
               </Form.Item>
             </Col>
+            {isNew && (
+              <Col span={12}>
+                <Form.Item name="course_id" label="所属课程" rules={[{ required: true, message: '请选择所属课程' }]}>
+                  <Select placeholder="请选择课程">
+                    {courses.map((c) => (
+                      <Select.Option key={c.id} value={c.id}>
+                        {c.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+            )}
             <Col span={6}>
               <Form.Item name="duration" label="考试时长(分钟)" rules={[{ required: true, message: '请输入考试时长' }]}>
                 <InputNumber min={1} style={{ width: '100%' }} />
@@ -225,17 +256,19 @@ const ExamEdit = () => {
         </Form>
       </Card>
 
-      <Card
-        loading={loading}
-        title={`题目管理（${questions.length}）`}
-        extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
-            添加题目
-          </Button>
-        }
-      >
-        <Table columns={questionColumns} dataSource={questions} rowKey="id" pagination={false} />
-      </Card>
+      {!isNew && (
+        <Card
+          loading={loading}
+          title={`题目管理（${questions.length}）`}
+          extra={
+            <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
+              添加题目
+            </Button>
+          }
+        >
+          <Table columns={questionColumns} dataSource={questions} rowKey="id" pagination={false} />
+        </Card>
+      )}
 
       <Modal
         title="添加题目"

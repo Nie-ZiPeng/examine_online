@@ -1,4 +1,4 @@
-import axios from '../axios';
+import axios from './axios';
 
 export const getUsers = (params) => axios.get('/api/users', { params });
 export const createUser = (data) => axios.post('/api/users', data);
