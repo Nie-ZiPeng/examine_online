@@ -39,8 +39,13 @@ const Grading = () => {
     setRecordsLoading(true);
     try {
       const res = await getExamRecords(exam, { page: p, page_size: ps });
-      setRecords(res.data.items || []);
+      const items = res.data.items || [];
+      setRecords(items);
       setTotal(res.data.total || 0);
+      if (drawerOpen && drawerRecord) {
+        const updated = items.find((r) => r.id === drawerRecord.id);
+        if (updated) setDrawerRecord(updated);
+      }
     } catch (error) {
       message.error('获取考试记录失败');
     } finally {

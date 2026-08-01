@@ -20,8 +20,10 @@ const CourseManage = () => {
     setLoading(true);
     try {
       const res = await getCourses({ page: p, page_size: ps });
-      setCourses(res.data.items || []);
+      const items = res.data.items || [];
+      setCourses(items);
       setTotal(res.data.total || 0);
+      if (items.length === 0 && page > 1) setPage(page - 1);
     } catch (error) {
       message.error('获取课程列表失败');
     } finally {

@@ -54,10 +54,10 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
   const handleSave = async (answer) => {
     setSavingId(answer.id);
     try {
-      await gradeAnswer(answer.id, {
-        score: scores[answer.id] ?? 0,
-        is_correct: correctness[answer.id],
-      });
+      const isObjective = ['single', 'multiple', 'judge'].includes(answer.question?.type);
+      const payload = { score: scores[answer.id] ?? 0 };
+      if (isObjective) payload.is_correct = correctness[answer.id];
+      await gradeAnswer(answer.id, payload);
       message.success('已保存');
       onChanged?.();
     } catch (error) {
@@ -68,6 +68,7 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
   };
 
   const handleAutoGrade = async () => {
+    if (!record) return;
     const objective = answers.filter((a) =>
       ['single', 'multiple', 'judge'].includes(a.question.type)
     );
@@ -98,6 +99,7 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
   };
 
   const handleFinalize = async () => {
+    if (!record) return;
     try {
       await finalizeRecord(record.id);
       message.success('终评成功');
@@ -136,7 +138,7 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
                 {record.student?.name}（{record.student?.username}）
               </Descriptions.Item>
               <Descriptions.Item label="状态">
-                <Tag color={statusMap[record.status]?.color}>{statusMap[record.status]?.text}</Tag>
+                <Tag color={statusMap[record.status]?.color}>{statusMap[record.status]?.text || record.status}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="邮箱">{record.student?.email || '-'}</Descriptions.Item>
               <Descriptions.Item label="电话">{record.student?.phone || '-'}</Descriptions.Item>

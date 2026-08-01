@@ -24,8 +24,10 @@ const ExamList = () => {
     setLoading(true);
     try {
       const res = await getExams({ status: 'published', page: p, page_size: ps });
-      setExams(res.data.items || []);
+      const items = res.data.items || [];
+      setExams(items);
       setTotal(res.data.total || 0);
+      if (items.length === 0 && page > 1) setPage(page - 1);
     } catch (error) {
       message.error('获取考试列表失败');
     } finally {
