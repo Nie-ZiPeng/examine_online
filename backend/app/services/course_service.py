@@ -2,12 +2,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models.course import Course
 
-async def get_courses(db: AsyncSession, teacher_id: int = None):
+async def get_courses(db: AsyncSession, teacher_id: int = None, page: int = 1, page_size: int = 10):
     query = select(Course)
     if teacher_id:
         query = query.where(Course.teacher_id == teacher_id)
-    result = await db.execute(query)
-    return result.scalars().all()
+    count_query = select(func.count()).select_from(query.subquery())
+    total = (await db.execute(count_query)).scalar_one()
+    result = await db.execute(query.offset((page - 1) * page_size).limit(page_size))
+    return result.scalars().all(), total
 
 async def get_course(db: AsyncSession, course_id: int):
     result = await db.execute(select(Course).where(Course.id == course_id))

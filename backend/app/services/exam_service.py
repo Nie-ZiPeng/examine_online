@@ -1,15 +1,17 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.exam import Exam
 
-async def get_exams(db: AsyncSession, course_id: int = None, status: str = None):
+async def get_exams(db: AsyncSession, course_id: int = None, status: str = None, page: int = 1, page_size: int = 10):
     query = select(Exam)
     if course_id:
         query = query.where(Exam.course_id == course_id)
     if status:
         query = query.where(Exam.status == status)
-    result = await db.execute(query)
-    return result.scalars().all()
+    count_query = select(func.count()).select_from(query.subquery())
+    total = (await db.execute(count_query)).scalar_one()
+    result = await db.execute(query.offset((page - 1) * page_size).limit(page_size))
+    return result.scalars().all(), total
 
 async def get_exam(db: AsyncSession, exam_id: int):
     result = await db.execute(select(Exam).where(Exam.id == exam_id))

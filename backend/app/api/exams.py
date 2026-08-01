@@ -5,7 +5,7 @@ from app.database import get_db
 from app.schemas.exam import ExamCreate, ExamUpdate, ExamResponse
 from app.services.exam_service import get_exams, get_exam, create_exam, update_exam, publish_exam, delete_exam
 from app.utils.deps import get_current_user, require_role
-from app.utils.response import success_response
+from app.utils.response import success_response, paginated_response
 from app.models.user import User
 
 router = APIRouter(prefix="/api/exams", tags=["考试管理"])
@@ -14,12 +14,14 @@ router = APIRouter(prefix="/api/exams", tags=["考试管理"])
 async def list_exams(
     course_id: Optional[int] = None,
     status: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    exams = await get_exams(db, course_id, status)
+    exams, total = await get_exams(db, course_id, status, page, page_size)
     exams_data = [ExamResponse.model_validate(e).model_dump() for e in exams]
-    return success_response(data=exams_data)
+    return paginated_response(exams_data, total, page, page_size)
 
 @router.post("")
 async def create_new_exam(

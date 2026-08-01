@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.question import QuestionCreate, QuestionUpdate, QuestionResponse, QuestionImport
 from app.services.question_service import get_questions, get_question, create_question, batch_create_questions, update_question, delete_question
 from app.utils.deps import get_current_user, require_role
-from app.utils.response import success_response
+from app.utils.response import success_response, paginated_response
 from app.models.user import User
 
 router = APIRouter(tags=["题目管理"])
@@ -12,12 +12,14 @@ router = APIRouter(tags=["题目管理"])
 @router.get("/api/exams/{exam_id}/questions")
 async def list_questions(
     exam_id: int,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    questions = await get_questions(db, exam_id)
+    questions, total = await get_questions(db, exam_id, page, page_size)
     questions_data = [QuestionResponse.model_validate(q).model_dump() for q in questions]
-    return success_response(data=questions_data)
+    return paginated_response(questions_data, total, page, page_size)
 
 @router.post("/api/exams/{exam_id}/questions")
 async def create_new_question(

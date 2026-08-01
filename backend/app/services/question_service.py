@@ -1,13 +1,14 @@
 import json
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.models.question import Question
 
-async def get_questions(db: AsyncSession, exam_id: int):
-    result = await db.execute(
-        select(Question).where(Question.exam_id == exam_id).order_by(Question.sort_order)
-    )
-    return result.scalars().all()
+async def get_questions(db: AsyncSession, exam_id: int, page: int = 1, page_size: int = 10):
+    query = select(Question).where(Question.exam_id == exam_id).order_by(Question.sort_order)
+    count_query = select(func.count()).select_from(query.subquery())
+    total = (await db.execute(count_query)).scalar_one()
+    result = await db.execute(query.offset((page - 1) * page_size).limit(page_size))
+    return result.scalars().all(), total
 
 async def get_question(db: AsyncSession, question_id: int):
     result = await db.execute(select(Question).where(Question.id == question_id))

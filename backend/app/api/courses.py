@@ -1,22 +1,26 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.course import CourseCreate, CourseUpdate, CourseResponse
 from app.services.course_service import get_courses, get_course, create_course, update_course, delete_course
 from app.utils.deps import get_current_user, require_role
-from app.utils.response import success_response
+from app.utils.response import success_response, paginated_response
 from app.models.user import User
 
 router = APIRouter(prefix="/api/courses", tags=["课程管理"])
 
 @router.get("")
 async def list_courses(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    courses = await get_courses(db, current_user.id if current_user.role == "teacher" else None)
+    courses, total = await get_courses(
+        db, current_user.id if current_user.role == "teacher" else None, page, page_size
+    )
     courses_data = [CourseResponse.model_validate(c).model_dump() for c in courses]
-    return success_response(data=courses_data)
+    return paginated_response(courses_data, total, page, page_size)
 
 @router.post("")
 async def create_new_course(
