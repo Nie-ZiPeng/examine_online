@@ -19,7 +19,7 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !error.config?.url?.includes('/api/auth/login')) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }

@@ -30,6 +30,17 @@
       "react-app/jest"
     ]
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@ant-design|@rc-component|react-router|react-router-dom|antd|@babel/runtime|dayjs)/)"
+    ],
+    "moduleNameMapper": {
+      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
+      "^@rc-component/pagination/locale/(.*)$": "<rootDir>/node_modules/@rc-component/pagination/lib/locale/$1",
+      "^@rc-component/picker/locale/(.*)$": "<rootDir>/node_modules/@rc-component/picker/lib/locale/$1",
+      "^@rc-component/picker/generate/dayjs$": "<rootDir>/node_modules/@rc-component/picker/lib/generate/dayjs.js"
+    }
+  },
   "browserslist": {
     "production": [
       ">0.2%",

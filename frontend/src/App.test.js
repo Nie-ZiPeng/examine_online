@@ -1,8 +1,7 @@
-import { render, screen } from '@testing-library/react';
+﻿import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders login page title', async () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(await screen.findByText('在线考试系统')).toBeInTheDocument();
 });
