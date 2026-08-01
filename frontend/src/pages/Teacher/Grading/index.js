@@ -19,7 +19,6 @@ const Grading = () => {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [loading, setLoading] = useState(false);
   const [recordsLoading, setRecordsLoading] = useState(false);
   const [drawerRecord, setDrawerRecord] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
