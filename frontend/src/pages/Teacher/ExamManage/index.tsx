@@ -1,20 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Tag, Space, Popconfirm, message } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getExams, deleteExam, publishExam } from '../../../api/exams';
+import type { Exam, ExamStatus } from '../../../types/exam';
 import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
 
+const statusMap: Record<ExamStatus, { color: string; text: string }> = {
+  draft: { color: 'default', text: '草稿' },
+  published: { color: 'success', text: '已发布' },
+  ongoing: { color: 'processing', text: '进行中' },
+  finished: { color: 'default', text: '已结束' },
+};
+
 const ExamManage = () => {
-  const [exams, setExams] = useState([]);
+  const [exams, setExams] = useState<Exam[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const fetchExams = async (p, ps) => {
+  const fetchExams = async (p: number, ps: number) => {
     setLoading(true);
     try {
       const res = await getExams({ page: p, page_size: ps });
@@ -34,7 +43,7 @@ const ExamManage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     try {
       await deleteExam(id);
       message.success('删除成功');
@@ -44,7 +53,7 @@ const ExamManage = () => {
     }
   };
 
-  const handlePublish = async (id) => {
+  const handlePublish = async (id: number) => {
     try {
       await publishExam(id);
       message.success('发布成功');
@@ -54,14 +63,7 @@ const ExamManage = () => {
     }
   };
 
-  const statusMap = {
-    draft: { color: 'default', text: '草稿' },
-    published: { color: 'success', text: '已发布' },
-    ongoing: { color: 'processing', text: '进行中' },
-    finished: { color: 'default', text: '已结束' },
-  };
-
-  const columns = [
+  const columns: ColumnsType<Exam> = [
     { title: 'ID', dataIndex: 'id', key: 'id' },
     { title: '考试标题', dataIndex: 'title', key: 'title' },
     { title: '时长(分钟)', dataIndex: 'duration', key: 'duration' },
@@ -70,7 +72,7 @@ const ExamManage = () => {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => (
+      render: (status: ExamStatus) => (
         <Tag color={statusMap[status]?.color}>{statusMap[status]?.text}</Tag>
       ),
     },
@@ -122,8 +124,8 @@ const ExamManage = () => {
             pageSize,
             total,
             showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+            showTotal: (t: number) => `共 ${t} 条`,
+            onChange: (p: number, ps: number) => { setPage(p); setPageSize(ps); },
           }}
         />
       </PageCard>

@@ -1,24 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, Space, Popconfirm, message } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getCourses, createCourse, updateCourse, deleteCourse } from '../../../api/courses';
+import type { Course } from '../../../types/course';
 import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
 
 const { TextArea } = Input;
 
+interface CourseFormValues {
+  name: string;
+  description?: string;
+}
+
 const CourseManage = () => {
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingCourse, setEditingCourse] = useState(null);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<CourseFormValues>();
 
-  const fetchCourses = async (p, ps) => {
+  const fetchCourses = async (p: number, ps: number) => {
     setLoading(true);
     try {
       const res = await getCourses({ page: p, page_size: ps });
@@ -44,13 +51,13 @@ const CourseManage = () => {
     setModalVisible(true);
   };
 
-  const handleEdit = (record) => {
+  const handleEdit = (record: Course) => {
     setEditingCourse(record);
-    form.setFieldsValue({ name: record.name, description: record.description });
+    form.setFieldsValue({ name: record.name, description: record.description ?? undefined });
     setModalVisible(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     try {
       await deleteCourse(id);
       message.success('删除成功');
@@ -80,7 +87,7 @@ const CourseManage = () => {
     }
   };
 
-  const columns = [
+  const columns: ColumnsType<Course> = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 70 },
     { title: '课程名称', dataIndex: 'name', key: 'name' },
     { title: '课程描述', dataIndex: 'description', key: 'description', ellipsis: true },
@@ -88,7 +95,7 @@ const CourseManage = () => {
       title: '创建时间',
       dataIndex: 'created_at',
       key: 'created_at',
-      render: (v) => (v ? new Date(v).toLocaleString() : '-'),
+      render: (v?: string) => (v ? new Date(v).toLocaleString() : '-'),
     },
     {
       title: '操作',
@@ -131,11 +138,8 @@ const CourseManage = () => {
             pageSize,
             total,
             showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (p, ps) => {
-              setPage(p);
-              setPageSize(ps);
-            },
+            showTotal: (t: number) => `共 ${t} 条`,
+            onChange: (p: number, ps: number) => { setPage(p); setPageSize(ps); },
           }}
         />
       </PageCard>

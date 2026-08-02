@@ -1,22 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, Select, Space, Popconfirm, message } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getUsers, createUser, updateUser, deleteUser } from '../../../api/users';
+import type { User, UserRole } from '../../../types/user';
 import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
 
+interface UserFormValues {
+  username: string;
+  password?: string;
+  name: string;
+  role: UserRole;
+  email?: string;
+  phone?: string;
+}
+
 const UserManage = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [form] = Form.useForm();
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [form] = Form.useForm<UserFormValues>();
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const res = await getUsers();
-      setUsers(res.data.items);
+      setUsers(res.data.items || []);
     } catch (error) {
       message.error('获取用户列表失败');
     } finally {
@@ -34,13 +45,19 @@ const UserManage = () => {
     setModalVisible(true);
   };
 
-  const handleEdit = (record) => {
+  const handleEdit = (record: User) => {
     setEditingUser(record);
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      username: record.username,
+      name: record.name,
+      role: record.role,
+      email: record.email ?? undefined,
+      phone: record.phone ?? undefined,
+    });
     setModalVisible(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: number) => {
     try {
       await deleteUser(id);
       message.success('删除成功');
@@ -54,10 +71,10 @@ const UserManage = () => {
     try {
       const values = await form.validateFields();
       if (editingUser) {
-        await updateUser(editingUser.id, values);
+        await updateUser(editingUser.id, { name: values.name, email: values.email, phone: values.phone, role: values.role });
         message.success('更新成功');
       } else {
-        await createUser(values);
+        await createUser({ username: values.username, password: values.password || '', name: values.name, role: values.role, email: values.email, phone: values.phone });
         message.success('创建成功');
       }
       setModalVisible(false);
@@ -67,7 +84,7 @@ const UserManage = () => {
     }
   };
 
-  const columns = [
+  const columns: ColumnsType<User> = [
     { title: 'ID', dataIndex: 'id', key: 'id' },
     { title: '用户名', dataIndex: 'username', key: 'username' },
     { title: '姓名', dataIndex: 'name', key: 'name' },
