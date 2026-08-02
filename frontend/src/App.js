@@ -15,6 +15,9 @@ import ExamEdit from './pages/Teacher/ExamEdit';
 import CourseManage from './pages/Teacher/CourseManage';
 import Grading from './pages/Teacher/Grading';
 
+// 个人信息
+import Profile from './pages/Profile';
+
 // 学生页面
 import ExamList from './pages/Student/ExamList';
 import ExamTaking from './pages/Student/ExamTaking';
@@ -58,6 +61,7 @@ function App() {
             <Route path="my-records" element={<MyRecords />} />
             <Route path="courses" element={<CourseManage />} />
             <Route path="grading" element={<Grading />} />
+            <Route path="profile" element={<Profile />} />
             <Route path="*" element={<Navigate to="/exams" replace />} />
           </Route>
         </Routes>

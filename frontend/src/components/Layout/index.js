@@ -1,14 +1,39 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
+import { Layout, Menu, Dropdown } from 'antd';
+import { UserOutlined, LogoutOutlined, IdcardOutlined } from '@ant-design/icons';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import useAuthStore from '../../store/auth';
+import { logout as logoutApi } from '../../api/auth';
 
 const { Sider, Header, Content } = Layout;
 
 const AppLayout = () => {
   const user = useAuthStore((state) => state.user);
+  const logoutStore = useAuthStore((state) => state.logout);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } catch (e) {
+      // 忽略登出接口错误，本地照常清理
+    }
+    logoutStore();
+    navigate('/login');
+  };
+
+  const userMenu = {
+    items: [
+      { key: 'profile', icon: <IdcardOutlined />, label: '个人信息' },
+      { type: 'divider' },
+      { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', danger: true },
+    ],
+    onClick: ({ key }) => {
+      if (key === 'profile') navigate('/profile');
+      else if (key === 'logout') handleLogout();
+    },
+  };
 
   const getMenuItems = () => {
     if (user?.role === 'admin') {
@@ -44,7 +69,12 @@ const AppLayout = () => {
       </Sider>
       <Layout>
         <Header style={{ padding: '0 24px', background: '#fff', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <span>{user?.name}</span>
+          <Dropdown menu={userMenu} placement="bottomRight">
+            <span style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <UserOutlined />
+              {user?.name}
+            </span>
+          </Dropdown>
         </Header>
         <Content style={{ margin: 24, padding: 24, background: '#fff', borderRadius: 8 }}>
           <Outlet />
