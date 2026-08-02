@@ -1,6 +1,7 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
+import type { ApiResponse } from '../types/api';
 
-const instance = axios.create({
+const instance: AxiosInstance = axios.create({
   baseURL: 'http://localhost:8000',
   timeout: 10000,
 });
