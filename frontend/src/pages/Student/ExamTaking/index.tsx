@@ -4,9 +4,11 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getPaper, saveAnswers, submitExam, recordSwitch } from '../../../api/exams';
 import QuestionRenderer from '../../../components/QuestionRenderer';
 import PageCard from '../../../components/PageCard';
+import type { Paper } from '../../../types/record';
+import type { AnswerValue } from '../../../types/answer';
 import './index.css';
 
-const formatTime = (seconds) => {
+const formatTime = (seconds: number) => {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
@@ -16,11 +18,11 @@ const ExamTaking = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [paper, setPaper] = useState(null);
-  const [answers, setAnswers] = useState({});
+  const [paper, setPaper] = useState<Paper | null>(null);
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(() => {
-    const duration = location.state?.duration;
+    const duration = (location.state as { duration?: number } | null)?.duration;
     return duration ? duration * 60 : 0;
   });
 
@@ -28,7 +30,7 @@ const ExamTaking = () => {
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.hidden) {
-        await recordSwitch(examId);
+        await recordSwitch(Number(examId));
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -42,7 +44,7 @@ const ExamTaking = () => {
       onOk: async () => {
         setLoading(true);
         try {
-          const res = await submitExam(examId, answers);
+          const res = await submitExam(Number(examId), answers);
           message.success(`交卷成功，得分：${res.data.score}`);
           navigate('/my-records');
         } catch (error) {
@@ -73,7 +75,7 @@ const ExamTaking = () => {
   useEffect(() => {
     const timer = setInterval(async () => {
       if (Object.keys(answers).length > 0) {
-        await saveAnswers(examId, answers);
+        await saveAnswers(Number(examId), answers);
       }
     }, 30000);
     return () => clearInterval(timer);
@@ -82,7 +84,7 @@ const ExamTaking = () => {
   useEffect(() => {
     const fetchPaper = async () => {
       try {
-        const res = await getPaper(examId);
+        const res = await getPaper(Number(examId));
         setPaper(res.data);
         setAnswers(res.data.saved_answers || {});
       } catch (error) {
@@ -93,7 +95,7 @@ const ExamTaking = () => {
     fetchPaper();
   }, [examId, navigate]);
 
-  const handleAnswerChange = (questionId, value) => {
+  const handleAnswerChange = (questionId: number, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
@@ -123,7 +125,7 @@ const ExamTaking = () => {
             question={q}
             value={answers[q.id]}
             index={index}
-            onChange={(value) => handleAnswerChange(q.id, value)}
+            onChange={(value: AnswerValue) => handleAnswerChange(q.id, value)}
           />
         ))}
       </PageCard>
