@@ -16,7 +16,6 @@ interface ImportModalProps {
 
 const ImportModal: React.FC<ImportModalProps> = ({ open, examId, onClose, onSuccess }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [errors, setErrors] = useState<ImportError[]>([]);
   const [importResult, setImportResult] = useState<{ total: number; typeCounts: Record<string, number> } | null>(null);
@@ -24,7 +23,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ open, examId, onClose, onSucc
   const handleDownloadTemplate = async (format: 'excel' | 'word') => {
     try {
       const res = await downloadTemplate(format);
-      const blob = new Blob([res.data]);
+      const blob = res.data;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
