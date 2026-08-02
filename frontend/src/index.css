@@ -127,7 +127,13 @@ code {
 @media (prefers-reduced-motion: reduce) {
   .page-transition,
   .ant-card,
-  .ant-btn {
+  .ant-btn,
+  .ant-menu-item,
+  .ant-pagination-item,
+  .ant-tag,
+  .ant-form-item-has-error .ant-input,
+  .ant-form-item-has-error .ant-input-affix-wrapper,
+  .ant-form-item-has-error .ant-select-selector {
     animation: none !important;
     transition: none !important;
   }
