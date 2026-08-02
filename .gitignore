@@ -1,0 +1,44 @@
+# ===== 环境变量 =====
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!.env.example
+
+# ===== 本地工具 / 编辑器目录 =====
+.omo/
+.opencode/
+.superpowers/
+.idea/
+.vscode/
+*.iml
+
+# ===== 设计文档（不上传） =====
+docs/
+
+# ===== Python (后端) =====
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+env/
+.eggs/
+*.egg-info/
+uploads/
+
+# ===== Node (前端) =====
+node_modules/
+frontend/build/
+frontend/coverage/
+.pnp
+.pnp.js
+
+# ===== 日志 & 系统文件 =====
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
