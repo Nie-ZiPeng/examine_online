@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button, Space, Modal, message, Tag } from 'antd';
+import { Button, Space, Modal, message, Tag } from 'antd';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getPaper, saveAnswers, submitExam, recordSwitch } from '../../../api/exams';
 import QuestionRenderer from '../../../components/QuestionRenderer';
+import PageCard from '../../../components/PageCard';
+import './index.css';
 
 const formatTime = (seconds) => {
   const m = Math.floor(seconds / 60);
@@ -97,30 +99,34 @@ const ExamTaking = () => {
 
   if (!paper) return null;
 
+  const warn = timeLeft <= 300;
+
   return (
-    <div style={{ padding: 24 }}>
-      <Card
-        title={
-          <Space>
-            <span>考试进行中</span>
-            <Tag color="processing">剩余时间：{formatTime(timeLeft)}</Tag>
-          </Space>
-        }
-        extra={
+    <div className="exam-taking">
+      <div className="exam-taking-topbar">
+        <div className="exam-taking-info">
+          <span className="exam-taking-title">{paper.title || '考试进行中'}</span>
+          <span className={`exam-taking-timer${warn ? ' exam-taking-timer-warn' : ''}`}>
+            <Tag color={warn ? 'error' : 'processing'}>剩余时间 {formatTime(timeLeft)}</Tag>
+          </span>
+        </div>
+        <Space>
           <Button type="primary" danger onClick={handleSubmit} loading={loading}>
             交卷
           </Button>
-        }
-      >
+        </Space>
+      </div>
+      <PageCard>
         {paper.questions.map((q, index) => (
           <QuestionRenderer
             key={q.id}
             question={q}
             value={answers[q.id]}
+            index={index}
             onChange={(value) => handleAnswerChange(q.id, value)}
           />
         ))}
-      </Card>
+      </PageCard>
     </div>
   );
 };
