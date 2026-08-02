@@ -1,5 +1,4 @@
 import axios, { AxiosInstance } from 'axios';
-import type { ApiResponse } from '../types/api';
 
 const instance: AxiosInstance = axios.create({
   baseURL: 'http://localhost:8000',
