@@ -1,7 +1,13 @@
 import React from 'react';
 import './index.css';
 
-const PageHeader = ({ title, subtitle, extra }) => (
+interface PageHeaderProps {
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  extra?: React.ReactNode;
+}
+
+const PageHeader = ({ title, subtitle, extra }: PageHeaderProps) => (
   <div className="page-header">
     <div className="page-header-text">
       <h2 className="page-header-title">{title}</h2>

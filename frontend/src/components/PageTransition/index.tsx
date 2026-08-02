@@ -1,7 +1,11 @@
 import React from 'react';
 import './index.css';
 
-const PageTransition = ({ children }) => (
+interface PageTransitionProps {
+  children: React.ReactNode;
+}
+
+const PageTransition = ({ children }: PageTransitionProps) => (
   <div className="page-transition">{children}</div>
 );
 
