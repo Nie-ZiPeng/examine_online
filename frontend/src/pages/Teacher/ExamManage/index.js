@@ -3,6 +3,8 @@ import { Table, Button, Tag, Space, Popconfirm, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getExams, deleteExam, publishExam } from '../../../api/exams';
+import PageHeader from '../../../components/PageHeader';
+import PageCard from '../../../components/PageCard';
 
 const ExamManage = () => {
   const [exams, setExams] = useState([]);
@@ -100,23 +102,31 @@ const ExamManage = () => {
 
   return (
     <div>
-      <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/exams/new')} style={{ marginBottom: 16 }}>
-        创建考试
-      </Button>
-      <Table
-        columns={columns}
-        dataSource={exams}
-        loading={loading}
-        rowKey="id"
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          showTotal: (t) => `共 ${t} 条`,
-          onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-        }}
+      <PageHeader
+        title="考试管理"
+        subtitle="创建、发布并维护考试"
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/exams/new')}>
+            创建考试
+          </Button>
+        }
       />
+      <PageCard>
+        <Table
+          columns={columns}
+          dataSource={exams}
+          loading={loading}
+          rowKey="id"
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            showTotal: (t) => `共 ${t} 条`,
+            onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+          }}
+        />
+      </PageCard>
     </div>
   );
 };

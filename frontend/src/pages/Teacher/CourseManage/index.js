@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Modal, Form, Input, Space, Popconfirm, message } from 'antd';
+import { Table, Button, Modal, Form, Input, Space, Popconfirm, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getCourses, createCourse, updateCourse, deleteCourse } from '../../../api/courses';
+import PageHeader from '../../../components/PageHeader';
+import PageCard from '../../../components/PageCard';
 
 const { TextArea } = Input;
 
@@ -108,27 +110,35 @@ const CourseManage = () => {
   ];
 
   return (
-    <Card title="课程管理">
-      <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} style={{ marginBottom: 16 }}>
-        新建课程
-      </Button>
-      <Table
-        columns={columns}
-        dataSource={courses}
-        loading={loading}
-        rowKey="id"
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          showTotal: (t) => `共 ${t} 条`,
-          onChange: (p, ps) => {
-            setPage(p);
-            setPageSize(ps);
-          },
-        }}
+    <div>
+      <PageHeader
+        title="课程管理"
+        subtitle="维护课程信息，供考试关联使用"
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            新建课程
+          </Button>
+        }
       />
+      <PageCard>
+        <Table
+          columns={columns}
+          dataSource={courses}
+          loading={loading}
+          rowKey="id"
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            showTotal: (t) => `共 ${t} 条`,
+            onChange: (p, ps) => {
+              setPage(p);
+              setPageSize(ps);
+            },
+          }}
+        />
+      </PageCard>
       <Modal
         title={editingCourse ? '编辑课程' : '新建课程'}
         open={modalVisible}
@@ -146,7 +156,7 @@ const CourseManage = () => {
           </Form.Item>
         </Form>
       </Modal>
-    </Card>
+    </div>
   );
 };
 
