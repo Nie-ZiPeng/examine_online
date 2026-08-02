@@ -13,4 +13,5 @@ class Question(Base):
     answer = Column(Text, comment="正确答案")
     score = Column(Integer, nullable=False, default=1)
     sort_order = Column(Integer, default=0)
+    analysis = Column(Text, comment="题目解析")
     created_at = Column(DateTime, server_default=func.now())

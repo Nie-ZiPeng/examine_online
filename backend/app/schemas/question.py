@@ -10,6 +10,7 @@ class QuestionBase(BaseModel):
     answer: Optional[str] = None
     score: int = 1
     sort_order: int = 0
+    analysis: Optional[str] = None
 
 class QuestionCreate(QuestionBase):
     pass

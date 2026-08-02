@@ -85,25 +85,31 @@ async def import_questions_from_file(
     # Get summary
     summary = get_import_summary(questions)
 
-    # Create questions in database
-    created_questions = []
-    for q in questions:
-        question_data = {
-            "type": q.type.value,
-            "content": q.content,
-            "options": q.options.split("\n") if q.options else None,
-            "answer": q.answer,
-            "score": q.score,
-            "sort_order": len(created_questions)
-        }
-        question = await create_question(db, exam_id, question_data)
-        created_questions.append(question)
-
-    return success_response(data={
-        "imported_count": len(created_questions),
-        "summary": summary,
-        "questions": [QuestionResponse.model_validate(q).model_dump() for q in created_questions]
-    })
+    # Create questions in database - wrap in transaction to prevent partial writes
+    try:
+        created_questions = []
+        for q in questions:
+            question_data = {
+                "type": q.type.value,
+                "content": q.content,
+                "options": q.options.split("\n") if q.options else None,
+                "answer": q.answer,
+                "score": q.score,
+                "sort_order": len(created_questions),
+                "analysis": q.analysis
+            }
+            question = await create_question(db, exam_id, question_data)
+            created_questions.append(question)
+        
+        return success_response(data={
+            "imported_count": len(created_questions),
+            "summary": summary,
+            "questions": [QuestionResponse.model_validate(q).model_dump() for q in created_questions]
+        })
+    except Exception as e:
+        # Rollback on any error to prevent partial writes
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"导入失败: {str(e)}")
 
 @router.get("/api/exams/{exam_id}/questions")
 async def list_questions(
