@@ -25,7 +25,7 @@ const optionLetters = (index) => String.fromCharCode(65 + index);
 
 const ExamEdit = () => {
   const { examId } = useParams();
-  const isNew = examId === 'new';
+  const isNew = examId === undefined || examId === 'new';
   const navigate = useNavigate();
   const [examForm] = Form.useForm();
   const [questionForm] = Form.useForm();
