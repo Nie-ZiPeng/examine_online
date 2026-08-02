@@ -3,6 +3,7 @@ import {
   Table, Button, Tag, Space, Popconfirm, message, Form, Input, Select,
   InputNumber, Modal, DatePicker, Switch, Card, Divider, Row, Col,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { ArrowLeftOutlined, PlusOutlined, DeleteOutlined, MinusCircleOutlined, SaveOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -11,10 +12,14 @@ import {
 } from '../../../api/exams';
 import { getCourses } from '../../../api/courses';
 import PageHeader from '../../../components/PageHeader';
+import type { ExamFormValues } from '../../../types/exam';
+import type { ExamInput } from '../../../types/exam';
+import type { Course } from '../../../types/course';
+import type { Question, QuestionType, QuestionFormValues, QuestionInput } from '../../../types/question';
 
 const { TextArea } = Input;
 
-const typeMap = {
+const typeMap: Record<QuestionType, { color: string; text: string }> = {
   single: { color: 'blue', text: '单选题' },
   multiple: { color: 'geekblue', text: '多选题' },
   judge: { color: 'orange', text: '判断题' },
@@ -22,24 +27,24 @@ const typeMap = {
   essay: { color: 'green', text: '简答题' },
 };
 
-const optionLetters = (index) => String.fromCharCode(65 + index);
+const optionLetters = (index: number) => String.fromCharCode(65 + index);
 
 const ExamEdit = () => {
   const { examId } = useParams();
   const isNew = examId === undefined || examId === 'new';
   const navigate = useNavigate();
-  const [examForm] = Form.useForm();
-  const [questionForm] = Form.useForm();
-  const [questions, setQuestions] = useState([]);
+  const [examForm] = Form.useForm<ExamFormValues>();
+  const [questionForm] = Form.useForm<QuestionFormValues>();
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [questionTotal, setQuestionTotal] = useState(0);
   const [questionPage, setQuestionPage] = useState(1);
   const [questionPageSize, setQuestionPageSize] = useState(10);
-  const questionType = Form.useWatch('type', questionForm);
+  const questionType = Form.useWatch<QuestionType>('type', questionForm);
 
   const fetchData = async () => {
     if (isNew) {
@@ -54,15 +59,15 @@ const ExamEdit = () => {
     setLoading(true);
     try {
       const [examRes, questionsRes] = await Promise.all([
-        getExam(examId),
-        getExamQuestions(examId, { page: questionPage, page_size: questionPageSize }),
+        getExam(Number(examId)),
+        getExamQuestions(Number(examId), { page: questionPage, page_size: questionPageSize }),
       ]);
       const examData = examRes.data;
       setQuestions(questionsRes.data.items || []);
       setQuestionTotal(questionsRes.data.total || 0);
       examForm.setFieldsValue({
         title: examData.title,
-        description: examData.description,
+        description: examData.description ?? undefined,
         duration: examData.duration,
         total_score: examData.total_score,
         pass_score: examData.pass_score,
@@ -87,7 +92,7 @@ const ExamEdit = () => {
     try {
       const values = await examForm.validateFields();
       setSaving(true);
-      const payload = {
+      const payload: ExamInput = {
         title: values.title,
         description: values.description,
         duration: values.duration,
@@ -99,12 +104,12 @@ const ExamEdit = () => {
         max_switch: values.max_switch,
       };
       if (isNew) {
-        const created = await createExam({ ...payload, course_id: values.course_id });
+        const created = await createExam({ ...payload, course_id: values.course_id as number });
         message.success('考试创建成功');
         navigate(`/exams/${created.data.id}/edit`);
         return;
       }
-      await updateExam(examId, payload);
+      await updateExam(Number(examId), payload);
       message.success('考试信息保存成功');
       fetchData();
     } catch (error) {
@@ -114,7 +119,7 @@ const ExamEdit = () => {
     }
   };
 
-  const handleDeleteQuestion = async (id) => {
+  const handleDeleteQuestion = async (id: number) => {
     try {
       await deleteQuestion(id);
       message.success('删除成功');
@@ -134,7 +139,7 @@ const ExamEdit = () => {
     try {
       const values = await questionForm.validateFields();
       setSubmitting(true);
-      const payload = {
+      const payload: QuestionInput = {
         type: values.type,
         content: values.content,
         answer: values.answer,
@@ -142,7 +147,7 @@ const ExamEdit = () => {
         sort_order: questionTotal + 1,
         options: ['single', 'multiple'].includes(values.type) ? (values.options || []) : null,
       };
-      await createQuestion(examId, payload);
+      await createQuestion(Number(examId), payload);
       message.success('添加题目成功');
       setModalVisible(false);
       fetchData();
@@ -153,14 +158,14 @@ const ExamEdit = () => {
     }
   };
 
-  const questionColumns = [
+  const questionColumns: ColumnsType<Question> = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
     {
       title: '题型',
       dataIndex: 'type',
       key: 'type',
       width: 90,
-      render: (type) => <Tag color={typeMap[type]?.color}>{typeMap[type]?.text}</Tag>,
+      render: (type: QuestionType) => <Tag color={typeMap[type]?.color}>{typeMap[type]?.text}</Tag>,
     },
     { title: '题目内容', dataIndex: 'content', key: 'content', ellipsis: true },
     {
@@ -285,8 +290,8 @@ const ExamEdit = () => {
               pageSize: questionPageSize,
               total: questionTotal,
               showSizeChanger: true,
-              showTotal: (t) => `共 ${t} 条`,
-              onChange: (p, ps) => { setQuestionPage(p); setQuestionPageSize(ps); },
+              showTotal: (t: number) => `共 ${t} 条`,
+              onChange: (p: number, ps: number) => { setQuestionPage(p); setQuestionPageSize(ps); },
             }}
           />
         </Card>
@@ -306,9 +311,9 @@ const ExamEdit = () => {
             <Col span={12}>
               <Form.Item name="type" label="题型" rules={[{ required: true }]}>
                 <Select>
-                  {Object.entries(typeMap).map(([value, info]) => (
+                  {(Object.keys(typeMap) as QuestionType[]).map((value) => (
                     <Select.Option key={value} value={value}>
-                      {info.text}
+                      {typeMap[value].text}
                     </Select.Option>
                   ))}
                 </Select>
@@ -324,7 +329,7 @@ const ExamEdit = () => {
             <TextArea rows={3} placeholder="请输入题目内容" />
           </Form.Item>
 
-          {['single', 'multiple'].includes(questionType) && (
+          {questionType && ['single', 'multiple'].includes(questionType) && (
             <Form.Item label="选项" required>
               <Form.List name="options">
                 {(fields, { add, remove }) => (
