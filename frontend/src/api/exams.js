@@ -13,7 +13,7 @@ export const deleteQuestion = (questionId) => axios.delete(`/api/questions/${que
 export const startExam = (examId) => axios.post(`/api/exams/${examId}/start`);
 export const getPaper = (examId) => axios.get(`/api/exams/${examId}/paper`);
 export const saveAnswers = (examId, answers) => axios.post(`/api/exams/${examId}/save`, answers);
-export const submitExam = (examId) => axios.post(`/api/exams/${examId}/submit`);
+export const submitExam = (examId, answers) => axios.post(`/api/exams/${examId}/submit`, { answers });
 export const recordSwitch = (examId) => axios.post(`/api/exams/${examId}/switch`);
 export const getSwitchStatus = (examId) => axios.get(`/api/exams/${examId}/switch-status`);
 export const getMyRecords = () => axios.get('/api/records');

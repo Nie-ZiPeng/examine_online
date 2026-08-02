@@ -1,5 +1,6 @@
 import json
 import random
+import re
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -8,6 +9,26 @@ from app.models.question import Question
 from app.models.exam_record import ExamRecord
 from app.models.answer import Answer
 from app.redis_client import redis_client
+
+_JUDGE_ANSWER_MAP = {
+    "TRUE": "对", "FALSE": "错",
+    "正确": "对", "错误": "错",
+    "T": "对", "F": "错",
+    "YES": "对", "NO": "错",
+    "Y": "对", "N": "错",
+    "1": "对", "0": "错",
+}
+
+
+def _normalize_answer(q_type: str, value) -> str:
+    if value is None:
+        return ""
+    v = str(value).strip().upper()
+    if q_type == "multiple":
+        v = re.sub(r"[,，\s]+", "", v)
+    if q_type == "judge":
+        v = _JUDGE_ANSWER_MAP.get(v, v)
+    return v
 
 async def start_exam(db: AsyncSession, exam_id: int, student_id: int):
     # 检查考试是否存在
@@ -150,7 +171,7 @@ async def save_answers(db: AsyncSession, exam_id: int, student_id: int, answers:
     
     return True, None
 
-async def submit_exam(db: AsyncSession, exam_id: int, student_id: int):
+async def submit_exam(db: AsyncSession, exam_id: int, student_id: int, submitted_answers: dict = None):
     # 获取考试记录
     result = await db.execute(
         select(ExamRecord).where(
@@ -162,10 +183,13 @@ async def submit_exam(db: AsyncSession, exam_id: int, student_id: int):
     record = result.scalar_one_or_none()
     if not record:
         return None, "考试未进行中"
-    
-    # 从Redis获取保存的答案
-    cached_answers = await redis_client.get(f"exam:autosave:{exam_id}:{student_id}")
-    answers = json.loads(cached_answers) if cached_answers else {}
+
+    # 优先使用交卷请求携带的答案，避免依赖30秒自动保存的时机
+    if submitted_answers:
+        answers = submitted_answers
+    else:
+        cached_answers = await redis_client.get(f"exam:autosave:{exam_id}:{student_id}")
+        answers = json.loads(cached_answers) if cached_answers else {}
     
     # 获取题目
     result = await db.execute(
@@ -190,9 +214,11 @@ async def submit_exam(db: AsyncSession, exam_id: int, student_id: int):
         )
         
         if q.type in ["single", "multiple", "judge"]:
-            # 自动批改
-            if student_answer and q.answer:
-                is_correct = student_answer.upper() == q.answer.upper()
+            # 自动批改（对多选/判断题做容错归一化）
+            stu = _normalize_answer(q.type, student_answer)
+            ans = _normalize_answer(q.type, q.answer)
+            if stu and ans:
+                is_correct = stu == ans
                 answer.is_correct = is_correct
                 answer.score = q.score if is_correct else 0
                 total_score += answer.score

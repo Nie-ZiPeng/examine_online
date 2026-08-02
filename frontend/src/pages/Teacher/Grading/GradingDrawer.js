@@ -78,9 +78,19 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
     }
     const nextScores = { ...scores };
     const nextCorrect = { ...correctness };
+    const judgeMap = {
+      TRUE: '对', FALSE: '错', 正确: '对', 错误: '错',
+      T: '对', F: '错', YES: '对', NO: '错', Y: '对', N: '错', 1: '对', 0: '错',
+    };
+    const normalize = (type, value) => {
+      let v = (value == null ? '' : String(value)).trim().toUpperCase();
+      if (type === 'multiple') v = v.replace(/[,，\s]+/g, '');
+      if (type === 'judge') v = judgeMap[v] || v;
+      return v;
+    };
     objective.forEach((a) => {
-      const stu = (a.student_answer || '').trim().toUpperCase();
-      const ans = (a.question.answer || '').trim().toUpperCase();
+      const stu = normalize(a.question.type, a.student_answer);
+      const ans = normalize(a.question.type, a.question.answer);
       const isCorrect = !!stu && stu === ans;
       nextScores[a.id] = isCorrect ? a.question.score : 0;
       nextCorrect[a.id] = isCorrect;

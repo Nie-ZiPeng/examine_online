@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.services.exam_student_service import start_exam, get_paper, save_answers, submit_exam, get_my_records
@@ -54,10 +55,12 @@ async def save_answers_action(
 @router.post("/api/exams/{exam_id}/submit")
 async def submit_exam_action(
     exam_id: int,
+    payload: Optional[dict] = Body(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["student"]))
 ):
-    record, error = await submit_exam(db, exam_id, current_user.id)
+    submitted_answers = payload.get("answers") if payload else None
+    record, error = await submit_exam(db, exam_id, current_user.id, submitted_answers)
     if error:
         return error_response(message=error)
     return success_response(data={"score": record.score})

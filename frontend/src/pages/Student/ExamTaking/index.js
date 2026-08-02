@@ -40,7 +40,7 @@ const ExamTaking = () => {
       onOk: async () => {
         setLoading(true);
         try {
-          const res = await submitExam(examId);
+          const res = await submitExam(examId, answers);
           message.success(`交卷成功，得分：${res.data.score}`);
           navigate('/my-records');
         } catch (error) {
@@ -50,7 +50,7 @@ const ExamTaking = () => {
         }
       },
     });
-  }, [examId, navigate]);
+  }, [examId, answers, navigate]);
 
   // 倒计时
   useEffect(() => {
