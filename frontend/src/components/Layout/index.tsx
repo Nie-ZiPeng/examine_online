@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Layout, Menu, Dropdown, Avatar } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   UserOutlined,
   LogoutOutlined,
@@ -39,7 +40,7 @@ const AppLayout = () => {
     navigate('/login');
   };
 
-  const userMenu = {
+  const userMenu: MenuProps = {
     items: [
       { key: 'profile', icon: <IdcardOutlined />, label: '个人信息' },
       { type: 'divider' },
@@ -51,7 +52,7 @@ const AppLayout = () => {
     },
   };
 
-  const getMenuItems = () => {
+  const getMenuItems = (): MenuProps['items'] => {
     if (user?.role === 'admin') {
       return [
         { key: '/users', icon: <TeamOutlined />, label: '用户管理' },
