@@ -46,7 +46,47 @@ function App() {
   return (
     <ConfigProvider
       locale={zhCN}
-      theme={{ token: { colorPrimary: '#3D5A80', borderRadius: 6 } }}
+      theme={{
+        token: {
+          colorPrimary: '#3D5A80',
+          colorInfo: '#3D5A80',
+          colorSuccess: '#52C41A',
+          colorWarning: '#FAAD14',
+          colorError: '#FF4D4F',
+          colorTextBase: '#1A2332',
+          colorBgBase: '#FFFFFF',
+          colorBgLayout: '#F0F2F5',
+          colorBorder: '#E4E8EE',
+          borderRadius: 8,
+          fontFamily:
+            "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif",
+        },
+        components: {
+          Layout: {
+            siderBg: '#1A2332',
+            headerBg: '#FFFFFF',
+            headerHeight: 64,
+            bodyBg: '#F0F2F5',
+          },
+          Menu: {
+            darkItemBg: '#1A2332',
+            darkItemColor: '#8B9BB4',
+            darkItemHoverBg: '#2A3A4E',
+            darkItemHoverColor: '#FFFFFF',
+            darkItemSelectedBg: '#3D5A80',
+            darkItemSelectedColor: '#FFFFFF',
+            itemBorderRadius: 8,
+            itemMarginInline: 8,
+          },
+          Card: { borderRadiusLG: 12 },
+          Button: { borderRadius: 8, borderRadiusLG: 8, borderRadiusSM: 6 },
+          Input: { borderRadius: 8, borderRadiusLG: 8, borderRadiusSM: 6 },
+          Select: { borderRadius: 8, borderRadiusLG: 8, borderRadiusSM: 6 },
+          Modal: { borderRadiusLG: 16 },
+          Table: { headerBg: '#f7f9fb', headerSplitColor: '#E4E8EE' },
+          Tag: { borderRadiusSM: 6 },
+        },
+      }}
     >
       <BrowserRouter>
         <Routes>
