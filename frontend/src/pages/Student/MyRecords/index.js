@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Tag, message } from 'antd';
 import { getMyRecords } from '../../../api/exams';
+import PageHeader from '../../../components/PageHeader';
+import PageCard from '../../../components/PageCard';
 
 const MyRecords = () => {
   const [records, setRecords] = useState([]);
@@ -54,7 +56,14 @@ const MyRecords = () => {
     { title: '切屏次数', dataIndex: 'switch_count', key: 'switch_count' },
   ];
 
-  return <Table columns={columns} dataSource={records} loading={loading} rowKey="id" />;
+  return (
+    <div>
+      <PageHeader title="我的记录" subtitle="你参与过的考试与成绩" />
+      <PageCard>
+        <Table columns={columns} dataSource={records} loading={loading} rowKey="id" />
+      </PageCard>
+    </div>
+  );
 };
 
 export default MyRecords;

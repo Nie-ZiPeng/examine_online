@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { getExams, startExam } from '../../../api/exams';
+import PageHeader from '../../../components/PageHeader';
+import PageCard from '../../../components/PageCard';
 
 const ExamList = () => {
   const [exams, setExams] = useState([]);
@@ -64,20 +66,28 @@ const ExamList = () => {
   ];
 
   return (
-    <Table
-      columns={columns}
-      dataSource={exams}
-      loading={loading}
-      rowKey="id"
-      pagination={{
-        current: page,
-        pageSize,
-        total,
-        showSizeChanger: true,
-        showTotal: (t) => `共 ${t} 条`,
-        onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-      }}
-    />
+    <div>
+      <PageHeader
+        title="考试列表"
+        subtitle="选择一门考试开始作答"
+      />
+      <PageCard>
+        <Table
+          columns={columns}
+          dataSource={exams}
+          loading={loading}
+          rowKey="id"
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            showTotal: (t) => `共 ${t} 条`,
+            onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+          }}
+        />
+      </PageCard>
+    </div>
   );
 };
 
