@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models.exam_record import ExamRecord
@@ -60,6 +61,12 @@ async def get_record_answers(db: AsyncSession, record_id: int):
     answers_with_questions = []
     for a in answers:
         q = questions[a.question_id]
+        options = None
+        if q.options:
+            try:
+                options = json.loads(q.options)
+            except (ValueError, TypeError):
+                options = q.options
         answers_with_questions.append({
             "id": a.id,
             "question_id": a.question_id,
@@ -70,7 +77,7 @@ async def get_record_answers(db: AsyncSession, record_id: int):
             "question": {
                 "type": q.type,
                 "content": q.content,
-                "options": q.options,
+                "options": options,
                 "answer": q.answer,
                 "score": q.score
             }

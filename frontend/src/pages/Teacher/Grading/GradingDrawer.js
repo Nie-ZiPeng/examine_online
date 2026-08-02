@@ -155,7 +155,7 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
                 <strong>第 {index + 1} 题</strong>
                 <span>（{a.question.score}分）</span>
                 <p style={{ margin: '8px 0' }}>{a.question.content}</p>
-                {a.question.options?.length > 0 && (
+                {Array.isArray(a.question.options) && a.question.options.length > 0 && (
                   <div style={{ marginBottom: 8 }}>
                     {a.question.options.map((opt, i) => (
                       <div key={i}>{String.fromCharCode(65 + i)}. {opt}</div>
