@@ -29,7 +29,6 @@
 .login-brand::before {
   width: 360px;
   height: 360px;
-  animation: login-float 20s linear infinite;
 }
 
 .login-brand::after {
@@ -37,7 +36,6 @@
   bottom: 40px;
   width: 200px;
   height: 200px;
-  animation: login-float 20s linear infinite reverse;
 }
 
 @keyframes login-float {
@@ -146,7 +144,6 @@
   height: 100%;
   background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35), transparent);
   transform: skewX(-20deg);
-  transition: left 0.5s var(--ease-out);
 }
 
 .login-submit:hover::after {
@@ -158,12 +155,24 @@
     animation: login-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
+  .login-brand::before {
+    animation: login-float 20s linear infinite;
+  }
+
+  .login-brand::after {
+    animation: login-float 20s linear infinite reverse;
+  }
+
   .login-form-inner {
     animation: login-fade-up 0.5s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .login-submit:active {
     transform: scale(0.98);
+  }
+
+  .login-submit::after {
+    transition: left 0.5s var(--ease-out);
   }
 }
 

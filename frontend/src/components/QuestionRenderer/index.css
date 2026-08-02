@@ -54,7 +54,13 @@
   border: 1px solid transparent;
   border-radius: 8px;
   margin-inline-start: 0 !important;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .question-card-options .ant-radio-wrapper,
+  .question-card-options .ant-checkbox-wrapper {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
 }
 
 .question-card-options .ant-radio-wrapper:hover,

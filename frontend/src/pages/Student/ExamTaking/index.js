@@ -105,7 +105,7 @@ const ExamTaking = () => {
     <div className="exam-taking">
       <div className="exam-taking-topbar">
         <div className="exam-taking-info">
-          <span className="exam-taking-title">{paper.title || '考试进行中'}</span>
+          <span className="exam-taking-title">考试进行中</span>
           <span className={`exam-taking-timer${warn ? ' exam-taking-timer-warn' : ''}`}>
             <Tag color={warn ? 'error' : 'processing'}>剩余时间 {formatTime(timeLeft)}</Tag>
           </span>
