@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Select, Tag, Space, message } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { useSearchParams } from 'react-router-dom';
 import { getExams } from '../../../api/exams';
 import { getExamRecords } from '../../../api/grading';
+import type { Exam } from '../../../types/exam';
+import type { ExamRecord, RecordStatus } from '../../../types/record';
 import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
 import GradingDrawer from './GradingDrawer';
 
-const statusMap = {
+const statusMap: Record<RecordStatus, { color: string; text: string }> = {
   ongoing: { color: 'processing', text: '进行中' },
   submitted: { color: 'warning', text: '待阅卷' },
   graded: { color: 'success', text: '已阅卷' },
@@ -15,14 +18,14 @@ const statusMap = {
 
 const Grading = () => {
   const [searchParams] = useSearchParams();
-  const [exams, setExams] = useState([]);
-  const [examId, setExamId] = useState(null);
-  const [records, setRecords] = useState([]);
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [examId, setExamId] = useState<number | null>(null);
+  const [records, setRecords] = useState<ExamRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [recordsLoading, setRecordsLoading] = useState(false);
-  const [drawerRecord, setDrawerRecord] = useState(null);
+  const [drawerRecord, setDrawerRecord] = useState<ExamRecord | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -36,8 +39,7 @@ const Grading = () => {
     if (urlExamId) setExamId(Number(urlExamId));
   }, [searchParams]);
 
-  const fetchRecords = async (exam, p, ps) => {
-    if (!exam) return;
+  const fetchRecords = async (exam: number, p: number, ps: number) => {
     setRecordsLoading(true);
     try {
       const res = await getExamRecords(exam, { page: p, page_size: ps });
@@ -60,12 +62,12 @@ const Grading = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examId, page, pageSize]);
 
-  const handleOpenDrawer = (record) => {
+  const handleOpenDrawer = (record: ExamRecord) => {
     setDrawerRecord(record);
     setDrawerOpen(true);
   };
 
-  const columns = [
+  const columns: ColumnsType<ExamRecord> = [
     { title: '学生姓名', dataIndex: ['student', 'name'], key: 'student_name' },
     { title: '用户名', dataIndex: ['student', 'username'], key: 'username' },
     { title: '邮箱', dataIndex: ['student', 'email'], key: 'email' },
@@ -75,14 +77,14 @@ const Grading = () => {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (s) => <Tag color={statusMap[s]?.color}>{statusMap[s]?.text || s}</Tag>,
+      render: (s: RecordStatus) => <Tag color={statusMap[s]?.color}>{statusMap[s]?.text || s}</Tag>,
     },
     { title: '切屏次数', dataIndex: 'switch_count', key: 'switch_count', width: 100 },
     {
       title: '提交时间',
       dataIndex: 'submit_time',
       key: 'submit_time',
-      render: (v) => (v ? new Date(v).toLocaleString() : '-'),
+      render: (v?: string) => (v ? new Date(v).toLocaleString() : '-'),
     },
     {
       title: '操作',
@@ -108,7 +110,7 @@ const Grading = () => {
             style={{ width: 280 }}
             placeholder="请选择考试"
             value={examId}
-            onChange={(v) => {
+            onChange={(v: number) => {
               setExamId(v);
               setPage(1);
             }}
@@ -127,11 +129,8 @@ const Grading = () => {
             pageSize,
             total,
             showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (p, ps) => {
-              setPage(p);
-              setPageSize(ps);
-            },
+            showTotal: (t: number) => `共 ${t} 条`,
+            onChange: (p: number, ps: number) => { setPage(p); setPageSize(ps); },
           }}
           locale={{ emptyText: examId ? '该考试暂无记录' : '请先选择考试' }}
         />
@@ -140,7 +139,7 @@ const Grading = () => {
         record={drawerRecord}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        onChanged={() => fetchRecords(examId, page, pageSize)}
+        onChanged={() => fetchRecords(examId as number, page, pageSize)}
       />
     </div>
   );
