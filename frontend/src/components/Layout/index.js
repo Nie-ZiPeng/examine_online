@@ -1,13 +1,29 @@
-import React from 'react';
-import { Layout, Menu, Dropdown } from 'antd';
-import { UserOutlined, LogoutOutlined, IdcardOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Layout, Menu, Dropdown, Avatar } from 'antd';
+import {
+  UserOutlined,
+  LogoutOutlined,
+  IdcardOutlined,
+  AuditOutlined,
+  TeamOutlined,
+  FileTextOutlined,
+  BookOutlined,
+  CheckSquareOutlined,
+  FileSearchOutlined,
+  HistoryOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+} from '@ant-design/icons';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import useAuthStore from '../../store/auth';
 import { logout as logoutApi } from '../../api/auth';
+import PageTransition from '../PageTransition';
+import './index.css';
 
 const { Sider, Header, Content } = Layout;
 
 const AppLayout = () => {
+  const [collapsed, setCollapsed] = useState(false);
   const user = useAuthStore((state) => state.user);
   const logoutStore = useAuthStore((state) => state.logout);
   const location = useLocation();
@@ -38,27 +54,39 @@ const AppLayout = () => {
   const getMenuItems = () => {
     if (user?.role === 'admin') {
       return [
-        { key: '/users', label: '用户管理' },
-        { key: '/exams', label: '考试管理' },
+        { key: '/users', icon: <TeamOutlined />, label: '用户管理' },
+        { key: '/exams', icon: <FileTextOutlined />, label: '考试管理' },
       ];
     }
     if (user?.role === 'teacher') {
       return [
-        { key: '/courses', label: '课程管理' },
-        { key: '/exams', label: '考试管理' },
-        { key: '/grading', label: '阅卷管理' },
+        { key: '/courses', icon: <BookOutlined />, label: '课程管理' },
+        { key: '/exams', icon: <FileTextOutlined />, label: '考试管理' },
+        { key: '/grading', icon: <CheckSquareOutlined />, label: '阅卷管理' },
       ];
     }
     return [
-      { key: '/exams', label: '考试列表' },
-      { key: '/my-records', label: '我的记录' },
+      { key: '/exams', icon: <FileSearchOutlined />, label: '考试列表' },
+      { key: '/my-records', icon: <HistoryOutlined />, label: '我的记录' },
     ];
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible>
-        <div style={{ height: 32, margin: 16, background: 'rgba(255,255,255,0.2)', borderRadius: 6 }} />
+    <Layout className="app-layout">
+      <Sider
+        className={`app-sider${collapsed ? ' app-sider-collapsed' : ''}`}
+        width={220}
+        collapsedWidth={72}
+        collapsible
+        collapsed={collapsed}
+        trigger={null}
+      >
+        <div className="app-brand">
+          <span className="app-brand-icon">
+            <AuditOutlined />
+          </span>
+          {!collapsed && <span className="app-brand-name">在线考试系统</span>}
+        </div>
         <Menu
           theme="dark"
           mode="inline"
@@ -68,16 +96,35 @@ const AppLayout = () => {
         />
       </Sider>
       <Layout>
-        <Header style={{ padding: '0 24px', background: '#fff', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <Dropdown menu={userMenu} placement="bottomRight">
-            <span style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <UserOutlined />
-              {user?.name}
+        <Header className="app-header">
+          <div className="app-header-left">
+            <span className="app-collapse-btn">
+              {collapsed ? (
+                <MenuUnfoldOutlined
+                  onClick={() => setCollapsed(false)}
+                  style={{ cursor: 'pointer' }}
+                />
+              ) : (
+                <MenuFoldOutlined
+                  onClick={() => setCollapsed(true)}
+                  style={{ cursor: 'pointer' }}
+                />
+              )}
             </span>
-          </Dropdown>
+          </div>
+          <div className="app-header-right">
+            <Dropdown menu={userMenu} placement="bottomRight">
+              <span className="app-user">
+                <Avatar size={32} style={{ background: '#3D5A80' }} icon={<UserOutlined />} />
+                <span className="app-user-name">{user?.name || user?.username}</span>
+              </span>
+            </Dropdown>
+          </div>
         </Header>
-        <Content style={{ margin: 24, padding: 24, background: '#fff', borderRadius: 8 }}>
-          <Outlet />
+        <Content className="app-content">
+          <PageTransition>
+            <Outlet key={location.pathname} />
+          </PageTransition>
         </Content>
       </Layout>
     </Layout>
