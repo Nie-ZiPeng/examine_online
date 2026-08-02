@@ -84,7 +84,7 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
     };
     const normalize = (type, value) => {
       let v = (value == null ? '' : String(value)).trim().toUpperCase();
-      if (type === 'multiple') v = v.replace(/[,，\s]+/g, '');
+      if (type === 'multiple') v = v.replace(/[,，\s]+/g, '').split('').sort().join('');
       if (type === 'judge') v = judgeMap[v] || v;
       return v;
     };

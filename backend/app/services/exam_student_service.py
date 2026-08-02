@@ -26,6 +26,7 @@ def _normalize_answer(q_type: str, value) -> str:
     v = str(value).strip().upper()
     if q_type == "multiple":
         v = re.sub(r"[,，\s]+", "", v)
+        v = "".join(sorted(v))
     if q_type == "judge":
         v = _JUDGE_ANSWER_MAP.get(v, v)
     return v
