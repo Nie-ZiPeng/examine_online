@@ -6,6 +6,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { updateMe, changePassword, logout } from '../../api/auth';
 import useAuthStore from '../../store/auth';
+import PageHeader from '../../components/PageHeader';
+import PageCard from '../../components/PageCard';
 
 const roleMap = { student: '学生', teacher: '老师', admin: '管理员' };
 
@@ -66,7 +68,9 @@ const Profile = () => {
   };
 
   return (
-    <Card title="个人信息">
+    <div>
+      <PageHeader title="个人信息" subtitle="查看与修改你的账号资料" />
+      <PageCard>
       <Card type="inner" title="基本信息" style={{ marginBottom: 16 }}>
         {user && (
           <Descriptions column={2} style={{ marginBottom: 8 }}>
@@ -144,7 +148,8 @@ const Profile = () => {
           </Button>
         </Popconfirm>
       </Card>
-    </Card>
+      </PageCard>
+    </div>
   );
 };
 

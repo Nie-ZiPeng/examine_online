@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, Select, Space, Popconfirm, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getUsers, createUser, updateUser, deleteUser } from '../../../api/users';
+import PageHeader from '../../../components/PageHeader';
+import PageCard from '../../../components/PageCard';
 
 const UserManage = () => {
   const [users, setUsers] = useState([]);
@@ -91,10 +93,18 @@ const UserManage = () => {
 
   return (
     <div>
-      <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} style={{ marginBottom: 16 }}>
-        添加用户
-      </Button>
-      <Table columns={columns} dataSource={users} loading={loading} rowKey="id" />
+      <PageHeader
+        title="用户管理"
+        subtitle="管理学生、教师与管理员账号"
+        extra={
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+            添加用户
+          </Button>
+        }
+      />
+      <PageCard>
+        <Table columns={columns} dataSource={users} loading={loading} rowKey="id" />
+      </PageCard>
 
       <Modal
         title={editingUser ? '编辑用户' : '添加用户'}
