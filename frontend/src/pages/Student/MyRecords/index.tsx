@@ -20,7 +20,7 @@ const MyRecords = () => {
     setLoading(true);
     try {
       const res = await getMyRecords();
-      setRecords(res.data as unknown as ExamRecord[]);
+      setRecords(res.data);
     } catch (error) {
       message.error('获取考试记录失败');
     } finally {

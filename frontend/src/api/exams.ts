@@ -2,7 +2,7 @@ import axios from './axios';
 import type { ApiResponse, Paginated } from '../types/api';
 import type { Exam, ExamInput, ExamQuery } from '../types/exam';
 import type { Question, QuestionInput, QuestionQuery } from '../types/question';
-import type { Paper } from '../types/record';
+import type { ExamRecord, Paper } from '../types/record';
 import type { AnswerValue } from '../types/answer';
 
 export const getExams = (params?: ExamQuery): Promise<ApiResponse<Paginated<Exam>>> =>
@@ -53,5 +53,5 @@ export const recordSwitch = (examId: number): Promise<ApiResponse<unknown>> =>
 export const getSwitchStatus = (examId: number): Promise<ApiResponse<unknown>> =>
   axios.get(`/api/exams/${examId}/switch-status`) as Promise<ApiResponse<unknown>>;
 
-export const getMyRecords = (): Promise<ApiResponse<Record<string, unknown>[]>> =>
-  axios.get('/api/records') as Promise<ApiResponse<Record<string, unknown>[]>>;
+export const getMyRecords = (): Promise<ApiResponse<ExamRecord[]>> =>
+  axios.get('/api/records') as Promise<ApiResponse<ExamRecord[]>>;

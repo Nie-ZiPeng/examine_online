@@ -1,4 +1,13 @@
-import type { Question } from './question';
+import type { QuestionType } from './question';
+
+// 阅卷接口嵌套返回的题目信息（仅字段子集）
+export type GradingQuestion = {
+  type: QuestionType;
+  content: string;
+  options?: string[] | null;
+  answer?: string | null;
+  score: number;
+};
 
 export interface Answer {
   id: number;
@@ -10,8 +19,8 @@ export interface Answer {
   graded_at?: string | null;
   grader_id?: number | null;
   created_at: string;
-  // 阅卷接口嵌套返回题目完整信息
-  question?: Question;
+  // 阅卷接口嵌套返回题目信息（字段子集）
+  question?: GradingQuestion;
 }
 
 export interface GradeRequest {

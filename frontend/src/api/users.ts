@@ -16,6 +16,7 @@ export interface UserUpdateInput {
   email?: string;
   phone?: string;
   role?: UserRole;
+  is_active?: boolean;
 }
 
 export const getUsers = (params?: Record<string, unknown>): Promise<ApiResponse<Paginated<User>>> =>
