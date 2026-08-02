@@ -1,7 +1,7 @@
 import axios from './axios';
 import type { ApiResponse, Paginated } from '../types/api';
 import type { Exam, ExamInput, ExamQuery } from '../types/exam';
-import type { Question, QuestionInput, QuestionQuery } from '../types/question';
+import type { Question, QuestionInput, QuestionQuery, ImportResult, ImportErrorResponse } from '../types/question';
 import type { ExamRecord, Paper } from '../types/record';
 import type { AnswerValue } from '../types/answer';
 
@@ -55,3 +55,17 @@ export const getSwitchStatus = (examId: number): Promise<ApiResponse<unknown>> =
 
 export const getMyRecords = (): Promise<ApiResponse<ExamRecord[]>> =>
   axios.get('/api/records') as Promise<ApiResponse<ExamRecord[]>>;
+
+export const downloadTemplate = (format: 'excel' | 'word') => {
+  return axios.get(`/api/questions/template/${format}`, {
+    responseType: 'blob'
+  });
+};
+
+export const importQuestionsFile = (examId: number, file: File): Promise<ApiResponse<ImportResult> | ImportErrorResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return axios.post(`/api/exams/${examId}/questions/import-file`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }) as Promise<ApiResponse<ImportResult> | ImportErrorResponse>;
+};

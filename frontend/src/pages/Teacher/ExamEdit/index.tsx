@@ -4,7 +4,7 @@ import {
   InputNumber, Modal, DatePicker, Switch, Card, Divider, Row, Col,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { ArrowLeftOutlined, PlusOutlined, DeleteOutlined, MinusCircleOutlined, SaveOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, PlusOutlined, DeleteOutlined, MinusCircleOutlined, SaveOutlined, UploadOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import {
@@ -12,6 +12,7 @@ import {
 } from '../../../api/exams';
 import { getCourses } from '../../../api/courses';
 import PageHeader from '../../../components/PageHeader';
+import ImportModal from '../../../components/ImportModal';
 import type { ExamFormValues } from '../../../types/exam';
 import type { ExamInput } from '../../../types/exam';
 import type { Course } from '../../../types/course';
@@ -44,6 +45,7 @@ const ExamEdit = () => {
   const [questionTotal, setQuestionTotal] = useState(0);
   const [questionPage, setQuestionPage] = useState(1);
   const [questionPageSize, setQuestionPageSize] = useState(10);
+  const [importModalVisible, setImportModalVisible] = useState(false);
   const questionType = Form.useWatch<QuestionType>('type', questionForm);
 
   const fetchData = async () => {
@@ -87,6 +89,10 @@ const ExamEdit = () => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [examId, questionPage, questionPageSize]);
+
+  const handleImportSuccess = () => {
+    fetchData();
+  };
 
   const handleSaveExam = async () => {
     try {
@@ -276,9 +282,14 @@ const ExamEdit = () => {
           loading={loading}
           title={`题目管理（${questionTotal}）`}
           extra={
-            <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
-              添加题目
-            </Button>
+            <Space>
+              <Button icon={<UploadOutlined />} onClick={() => setImportModalVisible(true)}>
+                导入题目
+              </Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={openAddModal}>
+                添加题目
+              </Button>
+            </Space>
           }
         >
           <Table
@@ -373,6 +384,13 @@ const ExamEdit = () => {
           )}
         </Form>
       </Modal>
+
+      <ImportModal
+        open={importModalVisible}
+        examId={Number(examId)}
+        onClose={() => setImportModalVisible(false)}
+        onSuccess={handleImportSuccess}
+      />
     </div>
   );
 };

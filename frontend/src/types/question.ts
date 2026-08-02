@@ -34,3 +34,30 @@ export interface QuestionQuery {
   page?: number;
   page_size?: number;
 }
+
+export interface ImportError {
+  row: number;
+  type: string;
+  content_preview: string;
+  field: string;
+  current_value: string;
+  error: string;
+  expected: string;
+}
+
+export interface ImportResult {
+  imported_count: number;
+  summary: {
+    total: number;
+    type_counts: Record<string, number>;
+  };
+  questions: Question[];
+}
+
+export interface ImportErrorResponse {
+  code: number;
+  message: string;
+  data: {
+    errors: ImportError[];
+  };
+}

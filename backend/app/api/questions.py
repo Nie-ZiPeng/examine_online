@@ -1,13 +1,109 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+import os
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File as FastAPIFile
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.question import QuestionCreate, QuestionUpdate, QuestionResponse, QuestionImport
 from app.services.question_service import get_questions, get_question, create_question, batch_create_questions, update_question, delete_question
+from app.services.question_import_service import parse_excel, parse_word, get_import_summary
 from app.utils.deps import get_current_user, require_role
 from app.utils.response import success_response, paginated_response
 from app.models.user import User
 
 router = APIRouter(tags=["题目管理"])
+
+TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "templates")
+
+@router.get("/api/questions/template/{format}")
+async def download_template(
+    format: str,
+    current_user: User = Depends(require_role(["teacher", "admin"]))
+):
+    if format not in ("excel", "word"):
+        raise HTTPException(status_code=400, detail="格式不支持，仅支持 excel 或 word")
+
+    if format == "excel":
+        file_path = os.path.join(TEMPLATE_DIR, "question_import_template.xlsx")
+        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        filename = "question_import_template.xlsx"
+    else:
+        file_path = os.path.join(TEMPLATE_DIR, "question_import_template.docx")
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        filename = "question_import_template.docx"
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="模板文件不存在")
+
+    return FileResponse(
+        path=file_path,
+        media_type=media_type,
+        filename=filename
+    )
+
+@router.post("/api/exams/{exam_id}/questions/import-file")
+async def import_questions_from_file(
+    exam_id: int,
+    file: UploadFile = FastAPIFile(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(["teacher", "admin"]))
+):
+    # Validate file extension
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="文件名不能为空")
+
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in (".xlsx", ".docx"):
+        raise HTTPException(status_code=400, detail="仅支持 .xlsx 或 .docx 格式")
+
+    # Parse file
+    if ext == ".xlsx":
+        questions, errors = await parse_excel(file)
+    else:
+        questions, errors = await parse_word(file)
+
+    # Return errors if any
+    if errors:
+        return {
+            "code": 400,
+            "message": "导入失败",
+            "data": {
+                "errors": [
+                    {
+                        "row": e.row,
+                        "type": e.type,
+                        "content_preview": e.content_preview,
+                        "field": e.field,
+                        "current_value": e.current_value,
+                        "error": e.error,
+                        "expected": e.expected
+                    }
+                    for e in errors
+                ]
+            }
+        }
+
+    # Get summary
+    summary = get_import_summary(questions)
+
+    # Create questions in database
+    created_questions = []
+    for q in questions:
+        question_data = {
+            "type": q.type.value,
+            "content": q.content,
+            "options": q.options.split("\n") if q.options else None,
+            "answer": q.answer,
+            "score": q.score,
+            "sort_order": len(created_questions)
+        }
+        question = await create_question(db, exam_id, question_data)
+        created_questions.append(question)
+
+    return success_response(data={
+        "imported_count": len(created_questions),
+        "summary": summary,
+        "questions": [QuestionResponse.model_validate(q).model_dump() for q in created_questions]
+    })
 
 @router.get("/api/exams/{exam_id}/questions")
 async def list_questions(
