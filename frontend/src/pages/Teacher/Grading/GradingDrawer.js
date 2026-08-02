@@ -160,7 +160,7 @@ const GradingDrawer = ({ record, open, onClose, onChanged }) => {
             </Descriptions>
 
             {answers.map((a, index) => (
-              <div key={a.id} style={{ border: '1px solid #f0f0f0', borderRadius: 8, padding: 16, marginBottom: 16 }}>
+              <div key={a.id} style={{ border: '1px solid var(--color-border)', borderRadius: 12, padding: 16, marginBottom: 16, background: '#fff', boxShadow: 'var(--shadow-card)' }}>
                 <Tag color={typeMap[a.question.type]?.color}>{typeMap[a.question.type]?.text}</Tag>
                 <strong>第 {index + 1} 题</strong>
                 <span>（{a.question.score}分）</span>

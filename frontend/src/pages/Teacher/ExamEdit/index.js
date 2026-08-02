@@ -10,6 +10,7 @@ import {
   getExam, createExam, updateExam, getExamQuestions, createQuestion, deleteQuestion,
 } from '../../../api/exams';
 import { getCourses } from '../../../api/courses';
+import PageHeader from '../../../components/PageHeader';
 
 const { TextArea } = Input;
 
@@ -194,6 +195,11 @@ const ExamEdit = () => {
           {isNew ? '创建考试' : '保存考试信息'}
         </Button>
       </Space>
+
+      <PageHeader
+        title={isNew ? '新建考试' : '编辑考试'}
+        subtitle={isNew ? '填写考试基本信息' : '配置考试信息并管理题目'}
+      />
 
       <Card loading={loading} title="考试基本信息" style={{ marginBottom: 16 }}>
         <Form form={examForm} layout="vertical">

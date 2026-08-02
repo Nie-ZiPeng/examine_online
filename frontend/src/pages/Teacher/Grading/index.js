@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Select, Tag, Space, message } from 'antd';
+import { Table, Button, Select, Tag, Space, message } from 'antd';
 import { useSearchParams } from 'react-router-dom';
 import { getExams } from '../../../api/exams';
 import { getExamRecords } from '../../../api/grading';
+import PageHeader from '../../../components/PageHeader';
+import PageCard from '../../../components/PageCard';
 import GradingDrawer from './GradingDrawer';
 
 const statusMap = {
@@ -97,47 +99,50 @@ const Grading = () => {
   ];
 
   return (
-    <Card title="阅卷管理">
-      <Space style={{ marginBottom: 16 }}>
-        <span>选择考试：</span>
-        <Select
-          style={{ width: 280 }}
-          placeholder="请选择考试"
-          value={examId}
-          onChange={(v) => {
-            setExamId(v);
-            setPage(1);
+    <div>
+      <PageHeader title="阅卷管理" subtitle="逐题批改学生答卷" />
+      <PageCard>
+        <Space style={{ marginBottom: 16 }}>
+          <span>选择考试：</span>
+          <Select
+            style={{ width: 280 }}
+            placeholder="请选择考试"
+            value={examId}
+            onChange={(v) => {
+              setExamId(v);
+              setPage(1);
+            }}
+            options={exams.map((e) => ({ label: `${e.title}（ID: ${e.id}）`, value: e.id }))}
+            showSearch
+            optionFilterProp="label"
+          />
+        </Space>
+        <Table
+          columns={columns}
+          dataSource={records}
+          loading={recordsLoading}
+          rowKey="id"
+          pagination={{
+            current: page,
+            pageSize,
+            total,
+            showSizeChanger: true,
+            showTotal: (t) => `共 ${t} 条`,
+            onChange: (p, ps) => {
+              setPage(p);
+              setPageSize(ps);
+            },
           }}
-          options={exams.map((e) => ({ label: `${e.title}（ID: ${e.id}）`, value: e.id }))}
-          showSearch
-          optionFilterProp="label"
+          locale={{ emptyText: examId ? '该考试暂无记录' : '请先选择考试' }}
         />
-      </Space>
-      <Table
-        columns={columns}
-        dataSource={records}
-        loading={recordsLoading}
-        rowKey="id"
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          showSizeChanger: true,
-          showTotal: (t) => `共 ${t} 条`,
-          onChange: (p, ps) => {
-            setPage(p);
-            setPageSize(ps);
-          },
-        }}
-        locale={{ emptyText: examId ? '该考试暂无记录' : '请先选择考试' }}
-      />
+      </PageCard>
       <GradingDrawer
         record={drawerRecord}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         onChanged={() => fetchRecords(examId, page, pageSize)}
       />
-    </Card>
+    </div>
   );
 };
 
