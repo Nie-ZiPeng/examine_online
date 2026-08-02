@@ -11,31 +11,42 @@
   justify-content: center;
   padding: 48px 56px;
   color: #fff;
-  background: linear-gradient(160deg, #3d5a80 0%, #2c4460 55%, #24384f 100%);
+  background: linear-gradient(160deg, #3d5a80 0%, #2c4460 55%, #1a2332 100%);
   overflow: hidden;
 }
 
 .login-brand::before,
 .login-brand::after {
-  content: "";
+  content: '';
   position: absolute;
-  right: -40px;
-  bottom: -40px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  right: -60px;
+  bottom: -60px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 50%;
   pointer-events: none;
 }
 
 .login-brand::before {
-  width: 320px;
-  height: 320px;
+  width: 360px;
+  height: 360px;
+  animation: login-float 20s linear infinite;
 }
 
 .login-brand::after {
-  right: 60px;
-  bottom: 60px;
-  width: 180px;
-  height: 180px;
+  right: 40px;
+  bottom: 40px;
+  width: 200px;
+  height: 200px;
+  animation: login-float 20s linear infinite reverse;
+}
+
+@keyframes login-float {
+  from {
+    transform: rotate(0deg) translateY(0);
+  }
+  to {
+    transform: rotate(360deg) translateY(0);
+  }
 }
 
 .login-brand-inner {
@@ -44,17 +55,18 @@
 }
 
 .login-mark {
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 28px;
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 14px;
   font-size: 26px;
   color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .login-brand-name {
@@ -95,17 +107,50 @@
   margin: 0 0 8px;
   font-size: 26px;
   font-weight: 600;
-  color: #1f2d3d;
+  color: var(--color-text);
 }
 
 .login-subtitle {
   margin: 0 0 32px;
   font-size: 14px;
-  color: #5a6b7c;
+  color: var(--color-text-secondary);
+}
+
+.login-form-inner .ant-input-affix-wrapper {
+  border-radius: 8px;
+  transition: box-shadow 0.2s var(--ease-out), border-color 0.2s ease;
+}
+
+.login-form-inner .ant-input-affix-wrapper:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(61, 90, 128, 0.15);
 }
 
 .login-submit {
   margin-top: 8px;
+  height: 44px;
+  border-radius: 8px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #3d5a80, #2c4460);
+  box-shadow: 0 4px 12px rgba(61, 90, 128, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-submit::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s var(--ease-out);
+}
+
+.login-submit:hover::after {
+  left: 130%;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -127,7 +172,6 @@
     opacity: 0;
     transform: translateY(12px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
