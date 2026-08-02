@@ -23,9 +23,11 @@ import ExamList from './pages/Student/ExamList';
 import ExamTaking from './pages/Student/ExamTaking';
 import MyRecords from './pages/Student/MyRecords';
 
-const PrivateRoute = ({ children }) => {
+import type { ReactNode } from 'react';
+
+const PrivateRoute = ({ children }: { children: ReactNode }) => {
   const token = useAuthStore((state) => state.token);
-  return token ? children : <Navigate to="/login" replace />;
+  return token ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
 // 根据角色渲染 /exams：管理员/老师进入考试管理，学生进入考试列表
