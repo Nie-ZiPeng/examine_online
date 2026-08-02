@@ -1,0 +1,70 @@
+.question-card {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+}
+
+.question-card:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+.question-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.question-card-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 7px;
+  background: var(--color-primary-light);
+  color: var(--color-primary-active);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.question-card-content {
+  font-size: 15px;
+  color: var(--color-text);
+  line-height: 1.7;
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+
+.question-card-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.question-card-options .ant-radio-wrapper,
+.question-card-options .ant-checkbox-wrapper {
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  margin-inline-start: 0 !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.question-card-options .ant-radio-wrapper:hover,
+.question-card-options .ant-checkbox-wrapper:hover {
+  background: #f5f8fc;
+  border-color: var(--color-border);
+}
+
+.question-card-options .ant-radio-wrapper-checked,
+.question-card-options .ant-checkbox-wrapper-checked {
+  background: var(--color-primary-light);
+  border-color: rgba(61, 90, 128, 0.35);
+}
