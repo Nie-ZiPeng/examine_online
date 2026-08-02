@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Upload, Button, Table, Tag, Space, message, Dropdown } from 'antd';
+import { Modal, Upload, Button, Table, Tag, message, Dropdown } from 'antd';
 import { UploadOutlined, DownloadOutlined, InboxOutlined } from '@ant-design/icons';
 import type { UploadProps } from 'antd';
 import { downloadTemplate, importQuestionsFile } from '../../api/exams';
