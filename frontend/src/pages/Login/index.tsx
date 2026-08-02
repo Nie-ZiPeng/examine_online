@@ -6,12 +6,17 @@ import { login } from '../../api/auth';
 import useAuthStore from '../../store/auth';
 import './index.css';
 
+interface LoginValues {
+  username: string;
+  password: string;
+}
+
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const setToken = useAuthStore((state) => state.setToken);
 
-  const onFinish = async (values) => {
+  const onFinish = async (values: LoginValues) => {
     setLoading(true);
     try {
       const res = await login(values.username, values.password);
@@ -19,7 +24,7 @@ const Login = () => {
       message.success('登录成功');
       navigate('/');
     } catch (error) {
-      message.error(error.response?.data?.detail || '登录失败');
+      message.error((error as { response?: { data?: { detail?: string } } }).response?.data?.detail || '登录失败');
     } finally {
       setLoading(false);
     }
