@@ -1,8 +1,7 @@
 import { downloadTemplate } from '../api/exams';
 
 export const downloadTemplateFile = async (format: 'excel' | 'word'): Promise<void> => {
-  const res = await downloadTemplate(format);
-  const blob = res.data as Blob;
+  const blob = (await downloadTemplate(format)) as unknown as Blob;
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

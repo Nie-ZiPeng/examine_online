@@ -21,7 +21,7 @@ describe('downloadTemplateFile', () => {
 
   it('下载 excel 模板且文件名为 .xlsx', async () => {
     const appendSpy = jest.spyOn(document.body, 'appendChild');
-    mockDownloadTemplate.mockResolvedValue({ data: new Blob(['x']) });
+    mockDownloadTemplate.mockResolvedValue(new Blob(['x']));
 
     await downloadTemplateFile('excel');
 
@@ -33,7 +33,7 @@ describe('downloadTemplateFile', () => {
 
   it('下载 word 模板且文件名为 .docx', async () => {
     const appendSpy = jest.spyOn(document.body, 'appendChild');
-    mockDownloadTemplate.mockResolvedValue({ data: new Blob(['x']) });
+    mockDownloadTemplate.mockResolvedValue(new Blob(['x']));
 
     await downloadTemplateFile('word');
 
@@ -42,7 +42,7 @@ describe('downloadTemplateFile', () => {
   });
 
   it('点击后清理临时 a 标签与 object URL', async () => {
-    mockDownloadTemplate.mockResolvedValue({ data: new Blob(['x']) });
+    mockDownloadTemplate.mockResolvedValue(new Blob(['x']));
 
     await downloadTemplateFile('excel');
 
