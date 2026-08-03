@@ -4,7 +4,7 @@
 
 为现有 FastAPI + React 在线考试系统的 `essay`（简答题）增加 AI 自动评分。学生交卷后，系统自动评分主观题并更新当前成绩；教师可以查看评分依据、审核或修改最终分数。首版仅覆盖文本简答题，不覆盖图片、附件、公式识别或多模态答案。
 
-模型通过 PydanticAI 调用 OpenAI-compatible Chat Completions 接口。供应商切换只能依赖环境变量，不修改业务代码。
+模型通过 PydanticAI 调用 OpenAI-compatible Chat Completions 接口。供应商切换只能依赖环境变量，不修改业务代码。用户可以通过配置base url，api key和模型名来调用OpenAI兼容的模型供应商。
 
 ## 已确认决策
 
@@ -98,7 +98,11 @@ AI_MAX_RETRIES=2
 
 ### 模型输出
 
-Pydantic 模型约束模型只生成如下评分内容：
+评分 Agent 使用 PydanticAI 的 `Agent(..., output_type=AiGradingResult, retries=2)` 输出类型。`AiGradingResult` 与其嵌套 `CriterionResult` 都由 Pydantic 定义，字段包含类型、必填性、字符串长度、`score >= 0`、`confidence in [0, 1]` 等通用约束。PydanticAI 将该模型转换为结构化输出约束，解析模型响应并执行 Pydantic 校验；输出不符合契约时，将校验错误反馈给模型进行最多两次修复，仍失败才让任务进入 Worker 级重试。
+
+few-shot 示例只用于统一部分得分、理由表述和边界答案的评分风格，不能作为指定格式或数据正确性的保障。
+
+模型只生成如下评分内容：
 
 ```json
 {
@@ -148,7 +152,7 @@ Pydantic 模型约束模型只生成如下评分内容：
 - 总分在 `[0, question.score]` 内，且等于各项之和。
 - `confidence` 在 `[0, 1]` 内。
 
-模型输出无法解析或不符合约束时，任务失败并按重试策略处理；绝不将异常结果写为 0 分。
+约束分为三层：PydanticAI 的 `output_type` 保证结构化返回与模型侧修复；Pydantic 字段约束保证通用类型和范围；Worker 的题目业务校验器将结果与当前数据库中的 rubric 和题目满分交叉验证。模型输出无法解析、PydanticAI 修复耗尽或业务校验不通过时，任务失败并按重试策略处理；绝不将异常结果写为 0 分。
 
 ## 执行流程
 
@@ -195,7 +199,7 @@ Worker 用数据库行锁或等价的原子 `UPDATE` 领取一条已到期的任
 ## 验收测试
 
 - rubric 创建与更新校验：唯一 ID、分值非负、总分一致。
-- Agent 结果校验：非法 JSON、缺失/重复要点、越界得分、总分不一致。
+- Agent 结果校验：非法 JSON 触发 PydanticAI 修复、修复耗尽、缺失/重复要点、越界得分、总分不一致。
 - Worker：成功、超时、重试、最终失败、进程中断后恢复。
 - 交卷：简答答案创建任务，客观题保持现有自动判分行为。
 - 并发：教师改分与 AI 延迟完成并发时，教师分数和原因保持不变。
