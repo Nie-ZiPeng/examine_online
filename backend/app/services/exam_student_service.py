@@ -215,7 +215,7 @@ async def submit_exam(db: AsyncSession, exam_id: int, student_id: int, submitted
             student_answer=student_answer
         )
         
-        if q.type in ["single", "multiple", "judge"]:
+        if q.type in ["single", "multiple", "judge", "blank"]:
             # 自动批改（对多选/判断题做容错归一化）
             stu = _normalize_answer(q.type, student_answer)
             ans = _normalize_answer(q.type, q.answer)
@@ -229,6 +229,9 @@ async def submit_exam(db: AsyncSession, exam_id: int, student_id: int, submitted
         await db.flush()
         if q.type == "essay":
             answer.grading_source = "pending"
+            await enqueue_ai_grading_task(db, answer.id)
+        elif q.type == "blank" and answer.is_correct is False:
+            # 填空题判错时送 AI 复核（容错大小写、空格等差异）
             await enqueue_ai_grading_task(db, answer.id)
     
     # 更新考试记录

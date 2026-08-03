@@ -1,3 +1,6 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
@@ -11,8 +14,21 @@ from app.api.questions import router as questions_router
 from app.api.exam_student import router as exam_student_router
 from app.api.grading import router as grading_router
 from app.api.statistics import router as statistics_router
+from app.workers.ai_grading_worker import run_worker
 
-app = FastAPI(title="在线考试系统", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    worker_task = asyncio.create_task(run_worker())
+    yield
+    worker_task.cancel()
+    try:
+        await worker_task
+    except asyncio.CancelledError:
+        pass
+
+app = FastAPI(title="在线考试系统", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,11 +46,6 @@ app.include_router(questions_router)
 app.include_router(exam_student_router)
 app.include_router(grading_router)
 app.include_router(statistics_router)
-
-@app.on_event("startup")
-async def startup():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
 
 @app.get("/api/health")
 async def health_check():

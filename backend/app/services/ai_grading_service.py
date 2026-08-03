@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import select, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.ai_grading_task import AiGradingTask
@@ -54,9 +54,16 @@ async def claim_next_ai_grading_task(
     now: datetime | None = None,
 ) -> AiGradingTask | None:
     now = now or datetime.now()
+    # 领取待处理任务，或回收崩溃 worker 遗留、处理超时的任务
+    reclaim_before = now - timedelta(minutes=5)
     task = await db.scalar(
         select(AiGradingTask)
-        .where(AiGradingTask.status == "pending", AiGradingTask.available_at <= now)
+        .where(
+            or_(
+                and_(AiGradingTask.status == "pending", AiGradingTask.available_at <= now),
+                and_(AiGradingTask.status == "processing", AiGradingTask.locked_at < reclaim_before),
+            )
+        )
         .order_by(AiGradingTask.available_at, AiGradingTask.id)
         .with_for_update(skip_locked=True)
         .limit(1)
