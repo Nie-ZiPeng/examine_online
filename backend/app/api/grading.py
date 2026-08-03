@@ -37,7 +37,12 @@ async def grade_single_answer(
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
     answer = await grade_answer(
-        db, answer_id, current_user.id, grade_data.score, grade_data.is_correct
+        db,
+        answer_id,
+        current_user.id,
+        grade_data.score,
+        grade_data.is_correct,
+        grade_data.override_reason,
     )
     if not answer:
         raise HTTPException(status_code=404, detail="答案不存在")

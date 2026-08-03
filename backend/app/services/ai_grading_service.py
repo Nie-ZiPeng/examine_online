@@ -1,3 +1,10 @@
+from datetime import datetime, timedelta
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.ai_grading_task import AiGradingTask
+from app.models.answer import Answer
 from app.schemas.ai_grading import AiGradingResult
 from app.schemas.question import RubricItem
 
@@ -29,3 +36,94 @@ def validate_grading_result(
     item_total = sum(item.score for item in criterion_results)
     if result.score != item_total or result.score > question_score:
         raise ValueError("总分与分项得分不一致")
+
+
+async def enqueue_ai_grading_task(db: AsyncSession, answer_id: int) -> AiGradingTask:
+    existing = await db.scalar(select(AiGradingTask).where(AiGradingTask.answer_id == answer_id))
+    if existing:
+        return existing
+    task = AiGradingTask(answer_id=answer_id, status="pending")
+    db.add(task)
+    await db.flush()
+    return task
+
+
+async def claim_next_ai_grading_task(
+    db: AsyncSession,
+    worker_id: str,
+    now: datetime | None = None,
+) -> AiGradingTask | None:
+    now = now or datetime.now()
+    task = await db.scalar(
+        select(AiGradingTask)
+        .where(AiGradingTask.status == "pending", AiGradingTask.available_at <= now)
+        .order_by(AiGradingTask.available_at, AiGradingTask.id)
+        .with_for_update(skip_locked=True)
+        .limit(1)
+    )
+    if not task:
+        return None
+    task.status = "processing"
+    task.attempt_count += 1
+    task.locked_at = now
+    task.locked_by = worker_id
+    await db.flush()
+    return task
+
+
+async def complete_ai_grading_task(
+    db: AsyncSession,
+    task_id: int,
+    result: AiGradingResult,
+    model_name: str,
+) -> None:
+    task = await db.scalar(select(AiGradingTask).where(AiGradingTask.id == task_id).with_for_update())
+    if not task:
+        raise ValueError("AI 评分任务不存在")
+    answer = await db.scalar(select(Answer).where(Answer.id == task.answer_id).with_for_update())
+    if not answer:
+        raise ValueError("AI 评分答案不存在")
+
+    now = datetime.now()
+    answer.ai_score = result.score
+    answer.ai_feedback = result.model_dump()
+    answer.ai_model = model_name
+    answer.ai_graded_at = now
+    if answer.grading_source in {"pending", "ai"}:
+        answer.score = result.score
+        answer.grading_source = "ai"
+        from app.services.grading_service import recalculate_total_score
+
+        await recalculate_total_score(db, answer.record_id, commit=False)
+
+    task.status = "completed"
+    task.completed_at = now
+    task.last_error = None
+    task.locked_at = None
+    task.locked_by = None
+    await db.commit()
+
+
+async def fail_ai_grading_task(
+    db: AsyncSession,
+    task_id: int,
+    error: Exception | str,
+    now: datetime | None = None,
+) -> None:
+    task = await db.scalar(select(AiGradingTask).where(AiGradingTask.id == task_id).with_for_update())
+    if not task:
+        return
+    now = now or datetime.now()
+    message = str(error).replace("\n", " ")[:500]
+    task.last_error = message
+    task.locked_at = None
+    task.locked_by = None
+    if task.attempt_count >= task.max_attempts:
+        task.status = "failed"
+        answer = await db.get(Answer, task.answer_id)
+        if answer and answer.grading_source == "pending":
+            answer.grading_source = "failed"
+    else:
+        task.status = "pending"
+        task.available_at = now + timedelta(seconds=2 ** task.attempt_count)
+    await db.commit()
