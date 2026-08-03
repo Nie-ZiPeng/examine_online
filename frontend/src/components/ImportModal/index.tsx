@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Modal, Upload, Button, Table, Tag, message, Dropdown } from 'antd';
 import { UploadOutlined, DownloadOutlined, InboxOutlined } from '@ant-design/icons';
 import type { UploadProps } from 'antd';
-import { downloadTemplate, importQuestionsFile } from '../../api/exams';
+import { importQuestionsFile } from '../../api/exams';
+import { downloadTemplateFile } from '../../utils/templateDownload';
 import type { ImportError } from '../../types/question';
 
 const { Dragger } = Upload;
@@ -22,16 +23,7 @@ const ImportModal: React.FC<ImportModalProps> = ({ open, examId, onClose, onSucc
 
   const handleDownloadTemplate = async (format: 'excel' | 'word') => {
     try {
-      const res = await downloadTemplate(format);
-      const blob = res.data;
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = format === 'excel' ? 'question_import_template.xlsx' : 'question_import_template.docx';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      await downloadTemplateFile(format);
       message.success('模板下载成功');
     } catch (error) {
       message.error('模板下载失败');
