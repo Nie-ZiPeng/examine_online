@@ -152,19 +152,19 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .login-brand-inner {
-    animation: login-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: login-fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .login-brand::before {
-    animation: login-float 20s linear infinite;
+    animation: login-float 40s linear infinite;
   }
 
   .login-brand::after {
-    animation: login-float 20s linear infinite reverse;
+    animation: login-float 40s linear infinite reverse;
   }
 
   .login-form-inner {
-    animation: login-fade-up 0.5s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: login-fade-up 1.2s 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .login-submit:active {

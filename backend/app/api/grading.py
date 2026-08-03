@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.answer import GradeRequest
 from app.services.grading_service import get_exam_records, get_record_answers, grade_answer, finalize_record
+from app.services.ai_grading_service import retry_ai_grading_task
 from app.utils.deps import get_current_user, require_role
 from app.utils.response import success_response, paginated_response
 from app.models.user import User
@@ -37,11 +38,27 @@ async def grade_single_answer(
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
     answer = await grade_answer(
-        db, answer_id, current_user.id, grade_data.score, grade_data.is_correct
+        db,
+        answer_id,
+        current_user.id,
+        grade_data.score,
+        grade_data.is_correct,
+        grade_data.override_reason,
     )
     if not answer:
         raise HTTPException(status_code=404, detail="答案不存在")
     return success_response(data={"id": answer.id, "score": answer.score})
+
+@router.post("/api/answers/{answer_id}/ai-grading/retry")
+async def retry_ai_grading(
+    answer_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(["teacher", "admin"])),
+):
+    task = await retry_ai_grading_task(db, answer_id)
+    if not task:
+        raise HTTPException(status_code=409, detail="仅失败的 AI 评分任务可重试")
+    return success_response(data={"answer_id": answer_id, "status": task.status})
 
 @router.put("/api/records/{record_id}/finalize")
 async def finalize_record_action(

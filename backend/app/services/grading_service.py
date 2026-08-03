@@ -6,6 +6,7 @@ from app.models.exam_record import ExamRecord
 from app.models.question import Question
 from app.models.answer import Answer
 from app.models.user import User
+from app.models.ai_grading_task import AiGradingTask
 
 async def get_exam_records(db: AsyncSession, exam_id: int, page: int = 1, page_size: int = 10):
     query = select(ExamRecord).where(ExamRecord.exam_id == exam_id).order_by(ExamRecord.submit_time.desc())
@@ -57,6 +58,8 @@ async def get_record_answers(db: AsyncSession, record_id: int):
         select(Question).where(Question.id.in_(question_ids))
     )
     questions = {q.id: q for q in result.scalars().all()}
+    task_result = await db.execute(select(AiGradingTask).where(AiGradingTask.answer_id.in_([a.id for a in answers])))
+    tasks = {task.answer_id: task for task in task_result.scalars().all()}
 
     answers_with_questions = []
     for a in answers:
@@ -67,6 +70,19 @@ async def get_record_answers(db: AsyncSession, record_id: int):
                 options = json.loads(q.options)
             except (ValueError, TypeError):
                 options = q.options
+        task = tasks.get(a.id)
+        ai_grading = {
+            "answer_id": a.id,
+            "question_id": a.question_id,
+            "record_id": a.record_id,
+            "grading_status": task.status if task else a.grading_source,
+            "grading_source": a.grading_source,
+            "ai_score": a.ai_score,
+            "ai_feedback": a.ai_feedback,
+            "ai_model": a.ai_model,
+            "ai_graded_at": a.ai_graded_at,
+            "last_error": task.last_error if task else None,
+        }
         answers_with_questions.append({
             "id": a.id,
             "question_id": a.question_id,
@@ -74,6 +90,7 @@ async def get_record_answers(db: AsyncSession, record_id: int):
             "score": a.score,
             "is_correct": a.is_correct,
             "graded_at": a.graded_at,
+            "ai_grading": ai_grading,
             "question": {
                 "type": q.type,
                 "content": q.content,
@@ -85,7 +102,14 @@ async def get_record_answers(db: AsyncSession, record_id: int):
 
     return answers_with_questions
 
-async def grade_answer(db: AsyncSession, answer_id: int, grader_id: int, score: int, is_correct: bool = None):
+async def grade_answer(
+    db: AsyncSession,
+    answer_id: int,
+    grader_id: int,
+    score: int,
+    is_correct: bool = None,
+    override_reason: str | None = None,
+):
     result = await db.execute(select(Answer).where(Answer.id == answer_id))
     answer = result.scalar_one_or_none()
     if not answer:
@@ -95,6 +119,9 @@ async def grade_answer(db: AsyncSession, answer_id: int, grader_id: int, score: 
     answer.is_correct = is_correct
     answer.graded_at = datetime.now()
     answer.grader_id = grader_id
+    if answer.ai_score is not None and score != answer.ai_score:
+        answer.override_reason = override_reason
+    answer.grading_source = "teacher"
 
     await db.commit()
 
@@ -104,7 +131,7 @@ async def grade_answer(db: AsyncSession, answer_id: int, grader_id: int, score: 
     await db.refresh(answer)
     return answer
 
-async def recalculate_total_score(db: AsyncSession, record_id: int):
+async def recalculate_total_score(db: AsyncSession, record_id: int, commit: bool = True):
     result = await db.execute(
         select(Answer).where(Answer.record_id == record_id)
     )
@@ -115,8 +142,8 @@ async def recalculate_total_score(db: AsyncSession, record_id: int):
     record = result.scalar_one_or_none()
     if record:
         record.score = total_score
-        record.status = "graded"
-        await db.commit()
+        if commit:
+            await db.commit()
 
 async def finalize_record(db: AsyncSession, record_id: int):
     result = await db.execute(select(ExamRecord).where(ExamRecord.id == record_id))

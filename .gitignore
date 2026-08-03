@@ -15,7 +15,7 @@ backend/.env.*
 *.iml
 
 # ===== 设计文档（不上传） =====
-docs/
+docs
 
 # ===== Python (后端) =====
 __pycache__/

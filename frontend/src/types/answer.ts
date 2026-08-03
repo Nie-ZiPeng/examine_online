@@ -9,6 +9,23 @@ export type GradingQuestion = {
   score: number;
 };
 
+export interface AiGrading {
+  answer_id: number;
+  question_id: number;
+  record_id: number;
+  grading_status: 'pending' | 'processing' | 'completed' | 'failed' | string;
+  grading_source: 'pending' | 'ai' | 'teacher' | 'failed' | string;
+  ai_score?: number | null;
+  ai_feedback?: {
+    reasoning?: string;
+    confidence?: number;
+    criterion_results?: Array<{ criterion_id: string; score: number; reason: string }>;
+  } | null;
+  ai_model?: string | null;
+  ai_graded_at?: string | null;
+  last_error?: string | null;
+}
+
 export interface Answer {
   id: number;
   record_id: number;
@@ -21,11 +38,13 @@ export interface Answer {
   created_at: string;
   // 阅卷接口嵌套返回题目信息（字段子集）
   question?: GradingQuestion;
+  ai_grading?: AiGrading;
 }
 
 export interface GradeRequest {
   score: number;
   is_correct?: boolean;
+  override_reason?: string;
 }
 
 export type AnswerValue = string | string[];

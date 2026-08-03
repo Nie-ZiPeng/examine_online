@@ -27,7 +27,8 @@ async def create_question(db: AsyncSession, exam_id: int, question_data: dict):
         answer=question_data.get("answer"),
         score=question_data.get("score", 1),
         sort_order=question_data.get("sort_order", 0),
-        analysis=question_data.get("analysis")
+        analysis=question_data.get("analysis"),
+        grading_rubric=question_data.get("grading_rubric"),
     )
     db.add(question)
     await db.commit()

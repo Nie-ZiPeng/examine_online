@@ -9,6 +9,7 @@ from app.models.question import Question
 from app.models.exam_record import ExamRecord
 from app.models.answer import Answer
 from app.redis_client import redis_client
+from app.services.ai_grading_service import enqueue_ai_grading_task
 
 _JUDGE_ANSWER_MAP = {
     "TRUE": "对", "FALSE": "错",
@@ -225,6 +226,10 @@ async def submit_exam(db: AsyncSession, exam_id: int, student_id: int, submitted
                 total_score += answer.score
         
         db.add(answer)
+        await db.flush()
+        if q.type == "essay":
+            answer.grading_source = "pending"
+            await enqueue_ai_grading_task(db, answer.id)
     
     # 更新考试记录
     record.submit_time = datetime.now()

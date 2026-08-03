@@ -49,7 +49,12 @@ const Login = () => {
         <div className="login-form-inner">
           <h2 className="login-title">欢迎登录</h2>
           <p className="login-subtitle">请使用您的账号密码登录系统</p>
-          <Form onFinish={onFinish} size="large">
+          <Form
+            onFinish={onFinish}
+            size="large"
+            labelCol={{ flex: '4em' }}
+            wrapperCol={{ flex: 1 }}
+          >
             <Form.Item
               name="username"
               label="用户名"

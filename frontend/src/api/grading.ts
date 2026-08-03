@@ -15,5 +15,8 @@ export const getRecordAnswers = (recordId: number): Promise<ApiResponse<Answer[]
 export const gradeAnswer = (answerId: number, data: GradeRequest): Promise<ApiResponse<Answer>> =>
   axios.put(`/api/answers/${answerId}/grade`, data) as Promise<ApiResponse<Answer>>;
 
+export const retryAiGrading = (answerId: number): Promise<ApiResponse<{ answer_id: number; status: string }>> =>
+  axios.post(`/api/answers/${answerId}/ai-grading/retry`) as Promise<ApiResponse<{ answer_id: number; status: string }>>;
+
 export const finalizeRecord = (recordId: number): Promise<ApiResponse<ExamRecord>> =>
   axios.put(`/api/records/${recordId}/finalize`) as Promise<ApiResponse<ExamRecord>>;
