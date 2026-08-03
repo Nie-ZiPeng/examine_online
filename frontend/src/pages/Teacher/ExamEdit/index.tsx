@@ -111,8 +111,8 @@ const ExamEdit = () => {
       };
       if (isNew) {
         const created = await createExam({ ...payload, course_id: values.course_id as number });
-        message.success('考试创建成功');
-        navigate(`/exams/${created.data.id}/edit`);
+        message.success('考试创建成功，可继续添加题目');
+        navigate(`/exams/${created.data.id}/edit`, { replace: true });
         return;
       }
       await updateExam(Number(examId), payload);
