@@ -10,5 +10,6 @@ def test_ai_settings_use_safe_defaults():
     )
 
     assert settings.AI_BASE_URL is None
+    assert settings.AI_MODEL is None
     assert settings.AI_TIMEOUT_SECONDS == 60
     assert settings.AI_MAX_RETRIES == 2
