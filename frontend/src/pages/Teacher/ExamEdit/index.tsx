@@ -166,7 +166,12 @@ const ExamEdit = () => {
   };
 
   const questionColumns: ColumnsType<Question> = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
+    {
+      title: '题号',
+      key: 'index',
+      width: 60,
+      render: (_, __, index) => (questionPage - 1) * questionPageSize + index + 1,
+    },
     {
       title: '题型',
       dataIndex: 'type',
