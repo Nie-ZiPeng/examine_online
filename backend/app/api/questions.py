@@ -1,4 +1,5 @@
 import os
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File as FastAPIFile
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,8 @@ from app.services.question_import_service import parse_excel, parse_word, get_im
 from app.utils.deps import get_current_user, require_role
 from app.utils.response import success_response, paginated_response
 from app.models.user import User
+
+logger = logging.getLogger("app.api.questions")
 
 router = APIRouter(tags=["题目管理"])
 
@@ -109,6 +112,7 @@ async def import_questions_from_file(
     except Exception as e:
         # Rollback on any error to prevent partial writes
         await db.rollback()
+        logger.exception("导入题目失败 exam_id=%s", exam_id)
         raise HTTPException(status_code=500, detail=f"导入失败: {str(e)}")
 
 @router.get("/api/exams/{exam_id}/questions")

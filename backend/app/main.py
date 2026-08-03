@@ -1,10 +1,14 @@
 import asyncio
+import logging
+import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
+from app.logging_config import setup_logging
 from app.models import *  # noqa: F403
 from app.api.auth import router as auth_router
 from app.api.users import router as users_router
@@ -16,17 +20,22 @@ from app.api.grading import router as grading_router
 from app.api.statistics import router as statistics_router
 from app.workers.ai_grading_worker import run_worker
 
+setup_logging()
+logger = logging.getLogger("app")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     worker_task = asyncio.create_task(run_worker())
+    logger.info("AI 评分 worker 已随服务启动")
     yield
     worker_task.cancel()
     try:
         await worker_task
     except asyncio.CancelledError:
         pass
+    logger.info("AI 评分 worker 已随服务停止")
 
 app = FastAPI(title="在线考试系统", version="1.0.0", lifespan=lifespan)
 
@@ -46,6 +55,26 @@ app.include_router(questions_router)
 app.include_router(exam_student_router)
 app.include_router(grading_router)
 app.include_router(statistics_router)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = (time.perf_counter() - start) * 1000
+    log = logger.warning if response.status_code >= 400 else logger.info
+    log(
+        "%s %s -> %s (%.1fms)",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+    )
+    return response
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "服务器内部错误"})
 
 @app.get("/api/health")
 async def health_check():
