@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Tag, Space, Popconfirm, message } from 'antd';
+import { Table, Button, Tag, Space, Popconfirm, message, Dropdown } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getExams, deleteExam, publishExam } from '../../../api/exams';
+import { downloadTemplateFile } from '../../../utils/templateDownload';
 import type { Exam, ExamStatus } from '../../../types/exam';
 import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
@@ -63,6 +64,20 @@ const ExamManage = () => {
     }
   };
 
+  const handleDownload = async (format: 'excel' | 'word') => {
+    try {
+      await downloadTemplateFile(format);
+      message.success('模板下载成功');
+    } catch (error) {
+      message.error('模板下载失败');
+    }
+  };
+
+  const templateMenuItems = [
+    { key: 'excel', label: 'Excel 模板 (.xlsx)', onClick: () => handleDownload('excel') },
+    { key: 'word', label: 'Word 模板 (.docx)', onClick: () => handleDownload('word') },
+  ];
+
   const columns: ColumnsType<Exam> = [
     { title: 'ID', dataIndex: 'id', key: 'id' },
     { title: '考试标题', dataIndex: 'title', key: 'title' },
@@ -108,11 +123,19 @@ const ExamManage = () => {
         title="考试管理"
         subtitle="创建、发布并维护考试"
         extra={
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/exams/new')}>
-            创建考试
-          </Button>
+          <Space>
+            <Dropdown menu={{ items: templateMenuItems }}>
+              <Button icon={<DownloadOutlined />}>下载模板</Button>
+            </Dropdown>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/exams/new')}>
+              创建考试
+            </Button>
+          </Space>
         }
       />
+      <div style={{ color: '#8c8c8c', fontSize: 12, marginBottom: 16 }}>
+        模板说明：按模板填写题目后，可在考试编辑页『导入题目』中上传，支持 .xlsx / .docx 批量导入五种题型。
+      </div>
       <PageCard>
         <Table
           columns={columns}
