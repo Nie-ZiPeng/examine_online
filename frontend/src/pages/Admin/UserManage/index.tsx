@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { App, Table, Button, Modal, Form, Input, Select, Space, Popconfirm } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -24,7 +24,7 @@ const UserManage = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [form] = Form.useForm<UserFormValues>();
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getUsers();
@@ -34,11 +34,11 @@ const UserManage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [message]);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   const handleAdd = () => {
     setEditingUser(null);

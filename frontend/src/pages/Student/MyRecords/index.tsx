@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { App, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { getMyRecords } from '../../../api/exams';
@@ -17,7 +17,7 @@ const MyRecords = () => {
   const [records, setRecords] = useState<ExamRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getMyRecords();
@@ -27,11 +27,11 @@ const MyRecords = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [message]);
 
   useEffect(() => {
     fetchRecords();
-  }, []);
+  }, [fetchRecords]);
 
   const columns: ColumnsType<ExamRecord> = [
     { title: '考试名称', dataIndex: 'exam_title', key: 'exam_title' },
