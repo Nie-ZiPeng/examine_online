@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Space, Modal, message, Tag } from 'antd';
+import { App, Button, Space, Modal, Tag } from 'antd';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getPaper, saveAnswers, submitExam, recordSwitch } from '../../../api/exams';
 import QuestionRenderer from '../../../components/QuestionRenderer';
@@ -15,6 +15,7 @@ const formatTime = (seconds: number) => {
 };
 
 const ExamTaking = () => {
+  const { message } = App.useApp();
   const { examId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,7 +55,7 @@ const ExamTaking = () => {
         }
       },
     });
-  }, [examId, answers, navigate]);
+  }, [examId, answers, navigate, message]);
 
   // 倒计时
   useEffect(() => {
@@ -93,7 +94,7 @@ const ExamTaking = () => {
       }
     };
     fetchPaper();
-  }, [examId, navigate]);
+  }, [examId, navigate, message]);
 
   const handleAnswerChange = (questionId: number, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));

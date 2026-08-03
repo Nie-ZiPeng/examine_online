@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Descriptions, Tag, Spin, message, Button, Space, InputNumber, Switch, Collapse, Input } from 'antd';
+import { App, Drawer, Descriptions, Tag, Spin, Button, Space, InputNumber, Switch, Collapse, Input } from 'antd';
 import {
   SaveOutlined,
   CheckSquareOutlined,
@@ -31,6 +31,7 @@ interface GradingDrawerProps {
 }
 
 const GradingDrawer = ({ record, open, onClose, onChanged }: GradingDrawerProps) => {
+  const { message } = App.useApp();
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(false);
   const [scores, setScores] = useState<Record<number, number>>({});
@@ -61,7 +62,7 @@ const GradingDrawer = ({ record, open, onClose, onChanged }: GradingDrawerProps)
       }
     };
     fetchAnswers();
-  }, [open, record]);
+  }, [open, record, message]);
 
   const handleSave = async (answer: Answer) => {
     setSavingId(answer.id);

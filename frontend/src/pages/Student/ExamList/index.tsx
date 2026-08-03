@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, message } from 'antd';
+import { App, Table, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import { getExams, startExam } from '../../../api/exams';
@@ -8,6 +8,7 @@ import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
 
 const ExamList = () => {
+  const { message } = App.useApp();
   const [exams, setExams] = useState<Exam[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);

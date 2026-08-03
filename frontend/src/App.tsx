@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { App as AntdApp, ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import Login from './pages/Login';
 import AppLayout from './components/Layout';
@@ -90,24 +90,26 @@ function App() {
         },
       }}
     >
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
-            <Route index element={<Navigate to="/exams" replace />} />
-            <Route path="users" element={<UserManage />} />
-            <Route path="exams" element={<ExamsPage />} />
-            <Route path="exams/new" element={<ExamEdit />} />
-            <Route path="exams/:examId/edit" element={<ExamEdit />} />
-            <Route path="exams/:examId/take" element={<ExamTaking />} />
-            <Route path="my-records" element={<MyRecords />} />
-            <Route path="courses" element={<CourseManage />} />
-            <Route path="grading" element={<Grading />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="*" element={<Navigate to="/exams" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AntdApp>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+              <Route index element={<Navigate to="/exams" replace />} />
+              <Route path="users" element={<UserManage />} />
+              <Route path="exams" element={<ExamsPage />} />
+              <Route path="exams/new" element={<ExamEdit />} />
+              <Route path="exams/:examId/edit" element={<ExamEdit />} />
+              <Route path="exams/:examId/take" element={<ExamTaking />} />
+              <Route path="my-records" element={<MyRecords />} />
+              <Route path="courses" element={<CourseManage />} />
+              <Route path="grading" element={<Grading />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="*" element={<Navigate to="/exams" replace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AntdApp>
     </ConfigProvider>
   );
 }

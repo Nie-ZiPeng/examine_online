@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Tag, message } from 'antd';
+import { App, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { getMyRecords } from '../../../api/exams';
 import type { ExamRecord, RecordStatus } from '../../../types/record';
@@ -13,6 +13,7 @@ const statusMap: Record<RecordStatus, { color: string; text: string }> = {
 };
 
 const MyRecords = () => {
+  const { message } = App.useApp();
   const [records, setRecords] = useState<ExamRecord[]>([]);
   const [loading, setLoading] = useState(false);
 

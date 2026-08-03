@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Upload, Button, Table, Tag, message, Dropdown } from 'antd';
+import { App, Modal, Upload, Button, Table, Tag, Dropdown } from 'antd';
 import { UploadOutlined, DownloadOutlined, InboxOutlined } from '@ant-design/icons';
 import type { UploadProps } from 'antd';
 import { importQuestionsFile } from '../../api/exams';
@@ -16,6 +16,7 @@ interface ImportModalProps {
 }
 
 const ImportModal: React.FC<ImportModalProps> = ({ open, examId, onClose, onSuccess }) => {
+  const { message } = App.useApp();
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [errors, setErrors] = useState<ImportError[]>([]);

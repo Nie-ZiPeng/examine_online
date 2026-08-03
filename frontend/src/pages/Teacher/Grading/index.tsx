@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Select, Tag, Space, message } from 'antd';
+import { App, Table, Button, Select, Tag, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useSearchParams } from 'react-router-dom';
 import { getExams } from '../../../api/exams';
@@ -17,6 +17,7 @@ const statusMap: Record<RecordStatus, { color: string; text: string }> = {
 };
 
 const Grading = () => {
+  const { message } = App.useApp();
   const [searchParams] = useSearchParams();
   const [exams, setExams] = useState<Exam[]>([]);
   const [examId, setExamId] = useState<number | null>(null);
@@ -32,7 +33,7 @@ const Grading = () => {
     getExams({ page_size: 100 })
       .then((res) => setExams(res.data.items || []))
       .catch(() => message.error('获取考试列表失败'));
-  }, []);
+  }, [message]);
 
   useEffect(() => {
     const urlExamId = searchParams.get('examId');

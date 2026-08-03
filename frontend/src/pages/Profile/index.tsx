@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Descriptions, Tag, Form, Input, Button, Divider, Popconfirm, message } from 'antd';
+import { App, Card, Descriptions, Tag, Form, Input, Button, Divider, Popconfirm } from 'antd';
 import {
   SaveOutlined, LockOutlined, LogoutOutlined, SafetyCertificateOutlined,
 } from '@ant-design/icons';
@@ -25,6 +25,7 @@ interface PwdFormValues {
 }
 
 const Profile = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const fetchUser = useAuthStore((state) => state.fetchUser);

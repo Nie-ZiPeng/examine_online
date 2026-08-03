@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Tag, Space, Popconfirm, message, Dropdown } from 'antd';
+import { App, Table, Button, Tag, Space, Popconfirm, Dropdown } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ const statusMap: Record<ExamStatus, { color: string; text: string }> = {
 };
 
 const ExamManage = () => {
+  const { message } = App.useApp();
   const [exams, setExams] = useState<Exam[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);

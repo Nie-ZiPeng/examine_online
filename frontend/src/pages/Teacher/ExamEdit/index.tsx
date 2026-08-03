@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Table, Button, Tag, Space, Popconfirm, message, Form, Input, Select,
+  App, Table, Button, Tag, Space, Popconfirm, Form, Input, Select,
   InputNumber, Modal, DatePicker, Switch, Card, Divider, Row, Col,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -31,6 +31,7 @@ const typeMap: Record<QuestionType, { color: string; text: string }> = {
 const optionLetters = (index: number) => String.fromCharCode(65 + index);
 
 const ExamEdit = () => {
+  const { message } = App.useApp();
   const { examId } = useParams();
   const isNew = examId === undefined || examId === 'new';
   const navigate = useNavigate();
