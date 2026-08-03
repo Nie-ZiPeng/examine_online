@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Descriptions, Tag, Spin, message, Button, Space, InputNumber, Switch } from 'antd';
+import { Drawer, Descriptions, Tag, Spin, message, Button, Space, InputNumber, Switch, Collapse, Input } from 'antd';
 import {
   SaveOutlined,
   CheckSquareOutlined,
   AuditOutlined,
 } from '@ant-design/icons';
-import { getRecordAnswers, gradeAnswer, finalizeRecord } from '../../../api/grading';
+import { getRecordAnswers, gradeAnswer, finalizeRecord, retryAiGrading } from '../../../api/grading';
 import type { ExamRecord } from '../../../types/record';
 import type { Answer, GradeRequest } from '../../../types/answer';
 import type { QuestionType } from '../../../types/question';
@@ -36,6 +36,7 @@ const GradingDrawer = ({ record, open, onClose, onChanged }: GradingDrawerProps)
   const [scores, setScores] = useState<Record<number, number>>({});
   const [correctness, setCorrectness] = useState<Record<number, boolean>>({});
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [overrideReasons, setOverrideReasons] = useState<Record<number, string>>({});
 
   useEffect(() => {
     if (!open || !record) return;
@@ -67,12 +68,34 @@ const GradingDrawer = ({ record, open, onClose, onChanged }: GradingDrawerProps)
     try {
       const isObjective = ['single', 'multiple', 'judge'].includes(answer.question?.type ?? '');
       const payload: GradeRequest = { score: scores[answer.id] ?? 0 };
+      const aiScore = answer.ai_grading?.ai_score;
+      if (answer.question?.type === 'essay' && aiScore != null && payload.score !== aiScore) {
+        const reason = overrideReasons[answer.id]?.trim();
+        if (!reason) {
+          message.error('请填写修改原因');
+          return;
+        }
+        payload.override_reason = reason;
+      }
       if (isObjective) payload.is_correct = correctness[answer.id];
       await gradeAnswer(answer.id, payload);
       message.success('已保存');
       onChanged?.();
     } catch (error) {
       message.error('保存失败');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const handleRetryAiGrading = async (answerId: number) => {
+    setSavingId(answerId);
+    try {
+      await retryAiGrading(answerId);
+      message.success('已重新提交 AI 评分');
+      onChanged?.();
+    } catch {
+      message.error('重新 AI 评分失败');
     } finally {
       setSavingId(null);
     }
@@ -192,6 +215,31 @@ const GradingDrawer = ({ record, open, onClose, onChanged }: GradingDrawerProps)
                 <p style={{ marginBottom: 0 }}>
                   <strong>学生答案：</strong>{a.student_answer || '（未作答）'}
                 </p>
+                {a.question?.type === 'essay' && a.ai_grading && (
+                  <Collapse
+                    size="small"
+                    style={{ marginTop: 12 }}
+                    items={[{
+                      key: 'ai-grading',
+                      label: `AI 评分依据（${a.ai_grading.grading_source === 'teacher' ? '教师已复核' : a.ai_grading.grading_status}）`,
+                      children: a.ai_grading.grading_status === 'failed' ? (
+                        <Space direction="vertical">
+                          <span>{a.ai_grading.last_error || 'AI 评分失败'}</span>
+                          <Button loading={savingId === a.id} onClick={() => handleRetryAiGrading(a.id)}>重新 AI 评分</Button>
+                        </Space>
+                      ) : (
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <span>AI 得分：{a.ai_grading.ai_score ?? '-'} / {a.question.score}</span>
+                          <span>置信度：{a.ai_grading.ai_feedback?.confidence ?? '-'}</span>
+                          <span>{a.ai_grading.ai_feedback?.reasoning || '评分中'}</span>
+                          {a.ai_grading.ai_feedback?.criterion_results?.map((item) => (
+                            <div key={item.criterion_id}>{item.criterion_id}: {item.score} 分，{item.reason}</div>
+                          ))}
+                        </Space>
+                      ),
+                    }]}
+                  />
+                )}
                 <Space align="center" style={{ marginTop: 12 }}>
                   {['single', 'multiple', 'judge'].includes(a.question?.type ?? '') && (
                     <>
@@ -220,6 +268,16 @@ const GradingDrawer = ({ record, open, onClose, onChanged }: GradingDrawerProps)
                     保存
                   </Button>
                 </Space>
+                {a.question?.type === 'essay' && a.ai_grading?.ai_score != null && scores[a.id] !== a.ai_grading.ai_score && (
+                  <Input.TextArea
+                    aria-label="修改原因"
+                    value={overrideReasons[a.id]}
+                    onChange={(event) => setOverrideReasons((previous) => ({ ...previous, [a.id]: event.target.value }))}
+                    placeholder="修改原因"
+                    rows={2}
+                    style={{ marginTop: 8 }}
+                  />
+                )}
               </div>
             ))}
             {answers.length === 0 && <div>该记录暂无答案</div>}

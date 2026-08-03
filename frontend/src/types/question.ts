@@ -1,5 +1,11 @@
 export type QuestionType = 'single' | 'multiple' | 'judge' | 'blank' | 'essay';
 
+export interface RubricItem {
+  criterion_id: string;
+  criterion: string;
+  points: number;
+}
+
 export interface Question {
   id: number;
   exam_id: number;
@@ -10,6 +16,7 @@ export interface Question {
   score: number;
   sort_order: number;
   created_at: string;
+  grading_rubric?: RubricItem[] | null;
 }
 
 export interface QuestionInput {
@@ -19,6 +26,7 @@ export interface QuestionInput {
   score: number;
   sort_order: number;
   options?: string[] | null;
+  grading_rubric?: RubricItem[] | null;
 }
 
 // 考试编辑页"添加题目"表单值
@@ -28,6 +36,7 @@ export interface QuestionFormValues {
   answer?: string;
   score: number;
   options?: string[];
+  grading_rubric?: RubricItem[];
 }
 
 export interface QuestionQuery {

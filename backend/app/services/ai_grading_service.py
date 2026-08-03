@@ -127,3 +127,19 @@ async def fail_ai_grading_task(
         task.status = "pending"
         task.available_at = now + timedelta(seconds=2 ** task.attempt_count)
     await db.commit()
+
+
+async def retry_ai_grading_task(db: AsyncSession, answer_id: int) -> AiGradingTask | None:
+    task = await db.scalar(select(AiGradingTask).where(AiGradingTask.answer_id == answer_id).with_for_update())
+    if not task or task.status != "failed":
+        return None
+    task.status = "pending"
+    task.available_at = datetime.now()
+    task.locked_at = None
+    task.locked_by = None
+    task.last_error = None
+    answer = await db.get(Answer, answer_id)
+    if answer and answer.grading_source == "failed":
+        answer.grading_source = "pending"
+    await db.commit()
+    return task
