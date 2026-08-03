@@ -56,6 +56,12 @@ class QuestionImportError:
     expected: str = ""
 
 
+def _normalize_option(line: str) -> str:
+    """去掉选项前的字母前缀（A. / A． / A、 / A ），库里只存选项内容。"""
+    normalized = re.sub(r"^[A-Za-z][\.\．、\s]+", "", line).strip()
+    return normalized if normalized else line
+
+
 async def parse_excel(file: UploadFile) -> tuple[list[QuestionImportItem], list[QuestionImportError]]:
     """Parse Excel file and return questions and errors."""
     import openpyxl
@@ -128,8 +134,8 @@ async def parse_excel(file: UploadFile) -> tuple[list[QuestionImportItem], list[
                     ))
                     break
             else:
-                # All options valid, normalize
-                options = "\n".join(option_lines)
+                # All options valid, normalize: strip leading letter prefix (A. / A． / A、 / A )
+                options = "\n".join(_normalize_option(line) for line in option_lines)
 
         # Validate answer
         if not answer:
@@ -313,7 +319,7 @@ async def parse_word(file: UploadFile) -> tuple[list[QuestionImportItem], list[Q
                     ))
                     break
             else:
-                options = "\n".join(option_lines)
+                options = "\n".join(_normalize_option(line) for line in option_lines)
 
         # Validate options required for choice questions
         if q_type in (QuestionType.single, QuestionType.multiple) and not options:

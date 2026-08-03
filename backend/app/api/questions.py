@@ -93,7 +93,7 @@ async def import_questions_from_file(
         created_questions = []
         for q in questions:
             question_data = {
-                "type": q.type.value,
+                "type": q.type.name,
                 "content": q.content,
                 "options": q.options.split("\n") if q.options else None,
                 "answer": q.answer,
