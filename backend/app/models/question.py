@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Text, JSON, Enum, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from app.database import Base
 
@@ -14,4 +14,5 @@ class Question(Base):
     score = Column(Integer, nullable=False, default=1)
     sort_order = Column(Integer, default=0)
     analysis = Column(Text, comment="题目解析")
+    grading_rubric = Column(JSON, comment="简答题评分要点")
     created_at = Column(DateTime, server_default=func.now())
