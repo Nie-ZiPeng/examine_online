@@ -20,7 +20,7 @@ describe('Login', () => {
     mockLogin.mockResolvedValue({ data: { access_token: 'token' } });
   });
 
-  it('渲染衡鉴品牌区与表单', () => {
+  it('渲染π考品牌区与表单', () => {
     render(
       <MemoryRouter>
         <Login />

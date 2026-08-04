@@ -79,7 +79,7 @@ const Dashboard = () => {
             ? `当前有 ${data.stats.available_exams} 场考试可参加，合理安排时间`
             : isTeacher
             ? `有 ${data.stats.pending_grading_count} 道题目待批改,尽快处理`
-            : '欢迎使用衡鉴在线考试系统管理端'}
+            : '欢迎使用π考在线考试系统管理端'}
         </p>
       </div>
 

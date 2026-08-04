@@ -7,7 +7,7 @@ describe('BrandLogo', () => {
     expect(document.querySelector('.brand-logo svg')).toBeTruthy();
   });
 
-  it('showName 时显示衡鉴名称', () => {
+  it('showName 时显示π考名称', () => {
     render(<BrandLogo showName />);
     expect(screen.getByText('π考')).toBeTruthy();
   });
