@@ -3,6 +3,7 @@ import { App, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { getMyRecords } from '../../../api/exams';
 import type { ExamRecord, RecordStatus } from '../../../types/record';
+import EmptyState from '../../../components/EmptyState';
 import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
 
@@ -63,7 +64,20 @@ const MyRecords = () => {
     <div>
       <PageHeader title="我的记录" subtitle="你参与过的考试与成绩" />
       <PageCard>
-        <Table columns={columns} dataSource={records} loading={loading} rowKey="id" />
+        <Table
+          columns={columns}
+          dataSource={records}
+          loading={loading}
+          rowKey="id"
+          locale={{
+            emptyText: (
+              <EmptyState
+                title="还没有考试记录"
+                description="参加考试后，成绩会显示在这里"
+              />
+            ),
+          }}
+        />
       </PageCard>
     </div>
   );

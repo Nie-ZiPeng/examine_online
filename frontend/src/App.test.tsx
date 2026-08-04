@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders login page title', async () => {
+test('renders login page brand slogan', async () => {
   render(<App />);
-  expect(await screen.findByText('在线考试系统')).toBeInTheDocument();
+  expect(await screen.findByText('严谨考测 · 公正鉴证')).toBeInTheDocument();
 });
 
 test('uses one equal responsive label column for login fields', async () => {

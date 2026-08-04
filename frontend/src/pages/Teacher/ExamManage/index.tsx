@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { getExams, deleteExam, publishExam } from '../../../api/exams';
 import { downloadTemplateFile } from '../../../utils/templateDownload';
 import type { Exam, ExamStatus } from '../../../types/exam';
+import EmptyState from '../../../components/EmptyState';
 import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
 
@@ -143,6 +144,19 @@ const ExamManage = () => {
           dataSource={exams}
           loading={loading}
           rowKey="id"
+          locale={{
+            emptyText: (
+              <EmptyState
+                title="暂无数据"
+                description="数据加载后会显示在这里"
+                action={
+                  <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/exams/new')}>
+                    创建考试
+                  </Button>
+                }
+              />
+            ),
+          }}
           pagination={{
             current: page,
             pageSize,
