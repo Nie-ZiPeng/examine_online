@@ -119,10 +119,18 @@ async def get_dashboard_data(db: AsyncSession, user: User) -> dict:
             for e in available[:2]
         ]
 
+        recent_result = await db.execute(
+            select(ExamRecord)
+            .where(
+                ExamRecord.student_id == user.id,
+                ExamRecord.status.in_(["submitted", "graded"]),
+            )
+            .order_by(ExamRecord.start_time.desc())
+        )
+        recent_records = recent_result.scalars().all()[:5]
+
         recent = []
-        for r in records[:5]:
-            if r.status not in ("submitted", "graded"):
-                continue
+        for r in recent_records:
             p_result = await db.execute(
                 select(Exam.pass_score).where(Exam.id == r.exam_id)
             )
@@ -137,8 +145,6 @@ async def get_dashboard_data(db: AsyncSession, user: User) -> dict:
                 "status": r.status,
                 "submit_time": r.submit_time,
             })
-            if len(recent) >= 5:
-                break
 
         return {
             "role": user.role,
@@ -160,9 +166,7 @@ async def get_dashboard_data(db: AsyncSession, user: User) -> dict:
         course_ids = [c.id for c in courses]
         course_count = len(courses)
 
-        exam_query = select(Exam)
-        if course_ids:
-            exam_query = exam_query.where(Exam.course_id.in_(course_ids))
+        exam_query = select(Exam).where(Exam.course_id.in_(course_ids))
         exam_result = await db.execute(exam_query)
         exams = exam_result.scalars().all()
         exam_ids = [e.id for e in exams]
@@ -200,8 +204,8 @@ async def get_dashboard_data(db: AsyncSession, user: User) -> dict:
                     "exam_title": e.title,
                     "pending_count": count,
                 })
+        pending_grading_count = sum(pending_by_exam.values())
         pending_grading = pending_grading[:5]
-        pending_grading_count = sum(i["pending_count"] for i in pending_grading)
 
         recent_exams = [
             {
