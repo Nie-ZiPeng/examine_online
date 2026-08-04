@@ -1,5 +1,15 @@
 import axios, { AxiosInstance } from 'axios';
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    preserveResponse?: boolean;
+  }
+
+  export interface InternalAxiosRequestConfig {
+    preserveResponse?: boolean;
+  }
+}
+
 const instance: AxiosInstance = axios.create({
   baseURL: 'http://localhost:8000',
   timeout: 10000,
@@ -17,7 +27,7 @@ instance.interceptors.request.use(
 );
 
 instance.interceptors.response.use(
-  (response) => response.data,
+  (response) => response.config.preserveResponse ? response : response.data,
   (error) => {
     if (error.response?.status === 401 && !error.config?.url?.includes('/api/auth/login')) {
       localStorage.removeItem('token');

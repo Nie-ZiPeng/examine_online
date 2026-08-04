@@ -1,11 +1,31 @@
-import { render, screen } from '@testing-library/react';
+import { App } from 'antd';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Dashboard from './index';
-import { getDashboard } from '../../api/statistics';
+import { exportDashboard, getDashboard } from '../../api/statistics';
+import { downloadDashboardFile } from '../../utils/dashboardExport';
 import type { ApiResponse } from '../../types/api';
-import type { StudentDashboardData } from '../../types/dashboard';
+import type {
+  AdminDashboardData,
+  StudentDashboardData,
+  TeacherDashboardData,
+} from '../../types/dashboard';
 
-jest.mock('../../api/statistics', () => ({ getDashboard: jest.fn() }));
+jest.mock('../../api/statistics', () => ({
+  exportDashboard: jest.fn(),
+  getDashboard: jest.fn(),
+}));
+
+jest.mock('../../utils/dashboardExport', () => ({
+  downloadDashboardFile: jest.fn(),
+}));
+
+jest.mock('../../components/EChart', () => ({
+  __esModule: true,
+  default: ({ ariaLabel }: { ariaLabel: string }) => (
+    <div role="img" aria-label={ariaLabel} />
+  ),
+}));
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -13,6 +33,8 @@ jest.mock('react-router-dom', () => ({
 }));
 
 const mockGetDashboard = getDashboard as jest.Mock;
+const mockExportDashboard = exportDashboard as jest.Mock;
+const mockDownloadDashboardFile = downloadDashboardFile as jest.Mock;
 
 const studentData: StudentDashboardData = {
   role: 'student',
@@ -21,23 +43,120 @@ const studentData: StudentDashboardData = {
     { id: 1, title: '期中考试', start_time: '2026-08-10 09:00:00', duration: 90 },
   ],
   recent_records: [
-    { id: 1, exam_id: 1, exam_title: '期末考试', score: 88, pass_score: 60, status: 'graded', submit_time: '2026-07-01 11:00:00' },
+    {
+      id: 1,
+      exam_id: 1,
+      exam_title: '期末考试',
+      score: 88,
+      pass_score: 60,
+      status: 'graded',
+      submit_time: '2026-07-01 11:00:00',
+    },
   ],
+};
+
+const teacherData: TeacherDashboardData = {
+  role: 'teacher',
+  stats: { published_exams: 2, pending_grading_count: 3, course_count: 1, total_records: 8 },
+  pending_grading: [{ exam_id: 2, exam_title: '数据结构', pending_count: 3 }],
+  recent_exams: [
+    { id: 2, title: '数据结构', status: 'published', start_time: '2026-08-08 09:00:00' },
+  ],
+};
+
+const adminData: AdminDashboardData = {
+  role: 'admin',
+  stats: { student_count: 4, teacher_count: 2, admin_count: 1, exam_count: 3 },
+  role_distribution: [
+    { role: 'student', count: 4 },
+    { role: 'teacher', count: 2 },
+    { role: 'admin', count: 1 },
+  ],
+  recent_users: [],
+};
+
+const renderDashboard = (data: StudentDashboardData | TeacherDashboardData | AdminDashboardData) => {
+  mockGetDashboard.mockResolvedValue({ data } as ApiResponse<typeof data>);
+  return render(
+    <App>
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>
+    </App>
+  );
 };
 
 describe('Dashboard', () => {
   beforeEach(() => {
-    mockGetDashboard.mockResolvedValue({ data: studentData } as ApiResponse<StudentDashboardData>);
+    jest.clearAllMocks();
+    mockExportDashboard.mockResolvedValue({ data: new Blob(['file']), headers: {} });
   });
 
-  it('学生端渲染统计卡片与即将开始的考试', async () => {
-    render(
-      <MemoryRouter>
-        <Dashboard />
-      </MemoryRouter>
+  it.each([
+    [studentData, ['最近成绩与及格线图表', '考试通过率图表']],
+    [teacherData, ['待批改题目数量图表', '最近考试时间线图表']],
+    [adminData, ['用户角色分布图表']],
+  ] as const)('renders only the charts for the current role', async (data, labels) => {
+    renderDashboard(data);
+
+    expect(await screen.findByText('导出数据')).toBeInTheDocument();
+    labels.forEach((label) => expect(screen.getByRole('img', { name: label })).toBeInTheDocument());
+    const chartLabels = [
+      '最近成绩与及格线图表',
+      '考试通过率图表',
+      '待批改题目数量图表',
+      '最近考试时间线图表',
+      '用户角色分布图表',
+    ];
+    expect(
+      chartLabels.filter((label) => screen.queryByRole('img', { name: label }))
+    ).toHaveLength(labels.length);
+  });
+
+  it('uses EmptyState instead of chart canvases when role datasets are empty', async () => {
+    renderDashboard({ ...teacherData, pending_grading: [], recent_exams: [] });
+
+    expect(await screen.findAllByText('没有待批改题目')).not.toHaveLength(0);
+    expect(screen.getAllByText('还没有考试')).not.toHaveLength(0);
+    expect(screen.queryByRole('img', { name: '待批改题目数量图表' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: '最近考试时间线图表' })).not.toBeInTheDocument();
+  });
+
+  it('exports CSV summary and all Excel sheets with independent loading state', async () => {
+    let resolveExport: ((value: unknown) => void) | undefined;
+    mockExportDashboard.mockImplementation(
+      () => new Promise((resolve) => { resolveExport = resolve; })
     );
-    expect(await screen.findByText('期中考试')).toBeTruthy();
-    expect(screen.getByText('2')).toBeTruthy(); // 可参加考试数
-    expect(screen.getByText('期末考试')).toBeTruthy();
+    renderDashboard(studentData);
+
+    const exportButton = await screen.findByRole('button', { name: /导出数据/ });
+    fireEvent.click(exportButton);
+    fireEvent.click(await screen.findByText('导出 CSV 概览'));
+
+    expect(mockExportDashboard).toHaveBeenCalledWith('csv', 'summary');
+    expect(exportButton).toBeDisabled();
+
+    const response = { data: new Blob(['csv']), headers: {} };
+    resolveExport?.(response);
+    await waitFor(() => expect(mockDownloadDashboardFile).toHaveBeenCalledWith(response, '仪表盘概览.csv'));
+
+    fireEvent.click(exportButton);
+    fireEvent.click(await screen.findByText('导出 Excel 全部数据'));
+    expect(mockExportDashboard).toHaveBeenCalledWith('xlsx', undefined);
+  });
+
+  it('shows an error and restores the export button when download fails', async () => {
+    const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockExportDashboard.mockRejectedValue(new Error('network error'));
+    renderDashboard(adminData);
+
+    const exportButton = await screen.findByRole('button', { name: /导出数据/ });
+    fireEvent.click(exportButton);
+    fireEvent.click(await screen.findByText('导出 CSV 概览'));
+
+    expect(await screen.findByText('导出仪表盘数据失败')).toBeInTheDocument();
+    await waitFor(() => expect(exportButton).not.toBeDisabled());
+    expect(mockDownloadDashboardFile).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 });

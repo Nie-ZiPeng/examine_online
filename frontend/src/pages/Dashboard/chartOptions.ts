@@ -107,9 +107,11 @@ export const buildTeacherRecentExamOption = (
   return {
     tooltip: {
       trigger: 'item',
+      renderMode: 'richText',
       formatter: (params) => {
-        const value = Array.isArray(params.value) ? params.value : [];
-        return `${value[1] ?? ''}<br/>${value[0] ?? ''}<br/>状态：${value[2] ?? ''}`;
+        const item = Array.isArray(params) ? params[0] : params;
+        const value = Array.isArray(item?.value) ? item.value : [];
+        return `${value[1] ?? ''}\n${value[0] ?? ''}\n状态：${value[2] ?? ''}`;
       },
     },
     grid: { left: 100, right: 24, top: 24, bottom: 48 },
