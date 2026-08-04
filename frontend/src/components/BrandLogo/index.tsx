@@ -14,7 +14,7 @@ const BrandLogo = ({ size = 32, showName = false }: BrandLogoProps) => (
       width={size}
       height={size}
       role="img"
-      aria-label="衡鉴"
+      aria-label="π考"
     >
       <defs>
         <linearGradient id="brand-logo-bg" x1="0" y1="0" x2="1" y2="1">
@@ -41,7 +41,7 @@ const BrandLogo = ({ size = 32, showName = false }: BrandLogoProps) => (
         fill="none"
       />
     </svg>
-    {showName && <span className="brand-logo-name">衡鉴</span>}
+    {showName && <span className="brand-logo-name">π考</span>}
   </span>
 );
 

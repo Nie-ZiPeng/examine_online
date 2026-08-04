@@ -88,7 +88,7 @@ const AppLayout = () => {
       >
         <div className="app-brand">
           <BrandLogo size={32} />
-          {!collapsed && <span className="app-brand-name">衡鉴</span>}
+          {!collapsed && <span className="app-brand-name">π考</span>}
         </div>
         <Menu
           theme="dark"

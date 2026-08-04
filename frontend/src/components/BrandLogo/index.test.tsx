@@ -9,11 +9,11 @@ describe('BrandLogo', () => {
 
   it('showName 时显示衡鉴名称', () => {
     render(<BrandLogo showName />);
-    expect(screen.getByText('衡鉴')).toBeTruthy();
+    expect(screen.getByText('π考')).toBeTruthy();
   });
 
   it('不传 showName 时不显示名称', () => {
     render(<BrandLogo />);
-    expect(screen.queryByText('衡鉴')).toBeNull();
+    expect(screen.queryByText('π考')).toBeNull();
   });
 });

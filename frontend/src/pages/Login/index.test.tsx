@@ -26,8 +26,8 @@ describe('Login', () => {
         <Login />
       </MemoryRouter>
     );
-    expect(screen.getByText('衡鉴')).toBeTruthy();
-    expect(screen.getByText('严谨考测 · 公正鉴证')).toBeTruthy();
+    expect(screen.getByText('π考')).toBeTruthy();
+    expect(screen.getByText('π尺为度 · 考以见真')).toBeTruthy();
     expect(screen.getByPlaceholderText('请输入用户名')).toBeTruthy();
     expect(screen.getByPlaceholderText('请输入密码')).toBeTruthy();
     expect(screen.getByRole('button', { name: (name) => name.replace(/\s+/g, '') === '登录' })).toBeTruthy();

@@ -3,7 +3,7 @@ import App from './App';
 
 test('renders login page brand slogan', async () => {
   render(<App />);
-  expect(await screen.findByText('严谨考测 · 公正鉴证')).toBeInTheDocument();
+  expect(await screen.findByText('π尺为度 · 考以见真')).toBeInTheDocument();
 });
 
 test('uses one equal responsive label column for login fields', async () => {
