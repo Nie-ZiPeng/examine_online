@@ -1,7 +1,5 @@
 from io import BytesIO
-from typing import Literal
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
@@ -49,11 +47,14 @@ async def get_dashboard(
 
 @router.get("/api/statistics/dashboard/export")
 async def export_dashboard_file(
-    file_format: Literal["csv", "xlsx"],
-    dataset: str | None = None,
+    file_format: str = Query(..., alias="format"),
+    dataset: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if file_format not in {"csv", "xlsx"}:
+        raise HTTPException(status_code=400, detail="Unsupported export format")
+
     selected_dataset = dataset or "summary"
     if file_format == "csv" and selected_dataset not in allowed_datasets_for_role(
         current_user.role

@@ -262,3 +262,16 @@ async def test_student_cannot_request_teacher_dataset(student_db, student_user):
         )
 
     assert exc_info.value.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_export_rejects_invalid_format(student_db, student_user):
+    with pytest.raises(HTTPException) as exc_info:
+        await statistics.export_dashboard_file(
+            file_format="pdf",
+            dataset=None,
+            db=student_db,
+            current_user=student_user,
+        )
+
+    assert exc_info.value.status_code == 400
