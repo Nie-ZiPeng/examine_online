@@ -1,6 +1,12 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+
+
+class StudentOverride(BaseModel):
+    student_id: int
+    action: str  # "include"=额外添加, "exclude"=排除
+
 
 class ExamBase(BaseModel):
     title: str
@@ -13,8 +19,12 @@ class ExamBase(BaseModel):
     random_order: bool = True
     max_switch: int = 3
 
+
 class ExamCreate(ExamBase):
     course_id: int
+    class_ids: List[int] = []
+    student_overrides: List[StudentOverride] = []
+
 
 class ExamUpdate(BaseModel):
     title: Optional[str] = None
@@ -27,6 +37,9 @@ class ExamUpdate(BaseModel):
     random_order: Optional[bool] = None
     max_switch: Optional[int] = None
     status: Optional[str] = None
+    class_ids: Optional[List[int]] = None
+    student_overrides: Optional[List[StudentOverride]] = None
+
 
 class ExamResponse(ExamBase):
     id: int
@@ -34,5 +47,4 @@ class ExamResponse(ExamBase):
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
