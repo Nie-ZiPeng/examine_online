@@ -23,6 +23,9 @@ import ExamList from './pages/Student/ExamList';
 import ExamTaking from './pages/Student/ExamTaking';
 import MyRecords from './pages/Student/MyRecords';
 
+// 仪表盘
+import Dashboard from './pages/Dashboard';
+
 import type { ReactNode } from 'react';
 
 const PrivateRoute = ({ children }: { children: ReactNode }) => {
@@ -95,7 +98,8 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<PrivateRoute><AppLayout /></PrivateRoute>}>
-              <Route index element={<Navigate to="/exams" replace />} />
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
               <Route path="users" element={<UserManage />} />
               <Route path="exams" element={<ExamsPage />} />
               <Route path="exams/new" element={<ExamEdit />} />
@@ -105,7 +109,7 @@ function App() {
               <Route path="courses" element={<CourseManage />} />
               <Route path="grading" element={<Grading />} />
               <Route path="profile" element={<Profile />} />
-              <Route path="*" element={<Navigate to="/exams" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>
           </Routes>
         </BrowserRouter>
