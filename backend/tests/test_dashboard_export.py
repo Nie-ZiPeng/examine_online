@@ -12,6 +12,9 @@ from app.services.dashboard_export_service import (
     get_dashboard_export_datasets,
     render_dashboard_export,
 )
+from app.api import statistics
+from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
 
 
 class ScalarResult:
@@ -221,3 +224,41 @@ def test_xlsx_renderer_creates_expected_sheets():
     workbook = load_workbook(BytesIO(content), read_only=True)
     assert workbook.sheetnames == ["summary", "role_distribution"]
     assert list(workbook["role_distribution"].values) == [("角色", "数量")]
+
+
+@pytest.mark.asyncio
+async def test_student_can_download_xlsx_with_attachment_headers(
+    monkeypatch, student_db, student_user
+):
+    datasets = {"summary": [{"metric": "pass_rate", "value": 80}]}
+    monkeypatch.setattr(
+        statistics,
+        "get_dashboard_export_datasets",
+        AsyncMock(return_value=datasets),
+    )
+
+    response = await statistics.export_dashboard_file(
+        file_format="xlsx",
+        dataset=None,
+        db=student_db,
+        current_user=student_user,
+    )
+
+    assert isinstance(response, StreamingResponse)
+    assert response.media_type == (
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    assert response.headers["content-disposition"].startswith("attachment;")
+
+
+@pytest.mark.asyncio
+async def test_student_cannot_request_teacher_dataset(student_db, student_user):
+    with pytest.raises(HTTPException) as exc_info:
+        await statistics.export_dashboard_file(
+            file_format="csv",
+            dataset="pending_grading",
+            db=student_db,
+            current_user=student_user,
+        )
+
+    assert exc_info.value.status_code == 400
