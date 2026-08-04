@@ -8,6 +8,8 @@ import useAuthStore from './store/auth';
 
 // 管理员页面
 import UserManage from './pages/Admin/UserManage';
+import ClassManage from './pages/Admin/ClassManage';
+import TeacherSubjectManage from './pages/Admin/TeacherSubjectManage';
 
 // 老师页面
 import ExamManage from './pages/Teacher/ExamManage';
@@ -101,6 +103,8 @@ function App() {
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="users" element={<UserManage />} />
+              <Route path="classes" element={<ClassManage />} />
+              <Route path="teacher-subjects" element={<TeacherSubjectManage />} />
               <Route path="exams" element={<ExamsPage />} />
               <Route path="exams/new" element={<ExamEdit />} />
               <Route path="exams/:examId/edit" element={<ExamEdit />} />

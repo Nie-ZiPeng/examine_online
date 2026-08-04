@@ -14,6 +14,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   DashboardOutlined,
+  AppstoreOutlined,
+  ReadOutlined,
 } from '@ant-design/icons';
 import BrandLogo from '../BrandLogo';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
@@ -57,7 +59,9 @@ const AppLayout = () => {
     if (user?.role === 'admin') {
       return [
         { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
+        { key: '/classes', icon: <AppstoreOutlined />, label: '班级管理' },
         { key: '/users', icon: <TeamOutlined />, label: '用户管理' },
+        { key: '/teacher-subjects', icon: <ReadOutlined />, label: '教师学科' },
         { key: '/exams', icon: <FileTextOutlined />, label: '考试管理' },
       ];
     }
