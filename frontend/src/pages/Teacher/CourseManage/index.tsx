@@ -4,6 +4,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getCourses, createCourse, updateCourse, deleteCourse } from '../../../api/courses';
 import type { Course } from '../../../types/course';
+import EmptyState from '../../../components/EmptyState';
 import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
 
@@ -134,6 +135,19 @@ const CourseManage = () => {
           dataSource={courses}
           loading={loading}
           rowKey="id"
+          locale={{
+            emptyText: (
+              <EmptyState
+                title="暂无数据"
+                description="数据加载后会显示在这里"
+                action={
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                    新建课程
+                  </Button>
+                }
+              />
+            ),
+          }}
           pagination={{
             current: page,
             pageSize,

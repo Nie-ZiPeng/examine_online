@@ -113,3 +113,7 @@
 .app-content > .page-transition {
   height: 100%;
 }
+
+.app-brand .brand-logo-name {
+  color: #fff;
+}

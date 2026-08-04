@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { App, Form, Input, Button } from 'antd';
-import { UserOutlined, LockOutlined, AuditOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../../api/auth';
 import useAuthStore from '../../store/auth';
+import BrandLogo from '../../components/BrandLogo';
 import './index.css';
 
 interface LoginValues {
@@ -33,51 +34,49 @@ const Login = () => {
 
   return (
     <div className="login-page">
-      <aside className="login-brand">
-        <div className="login-brand-inner">
-          <div className="login-mark" aria-hidden="true">
-            <AuditOutlined />
+      <div className="login-card">
+        <aside className="login-brand">
+          <div className="login-brand-inner">
+            <BrandLogo size={56} />
+            <h1 className="login-brand-name">π考</h1>
+            <span className="login-brand-en">πKAO · EXAM SYSTEM</span>
+            <p className="login-brand-slogan">π尺为度 · 考以见真</p>
           </div>
-          <h1 className="login-brand-name">在线考试系统</h1>
-          <span className="login-brand-en">ONLINE EXAM SYSTEM</span>
-        </div>
-        <span className="login-brand-footer">
-          © {new Date().getFullYear()} 在线考试系统
-        </span>
-      </aside>
+        </aside>
 
-      <main className="login-form-panel">
-        <div className="login-form-inner">
-          <h2 className="login-title">欢迎登录</h2>
-          <p className="login-subtitle">请使用您的账号密码登录系统</p>
-          <Form
-            onFinish={onFinish}
-            size="large"
-            labelCol={{ flex: '4em' }}
-            wrapperCol={{ flex: 1 }}
-          >
-            <Form.Item
-              name="username"
-              label="用户名"
-              rules={[{ required: true, message: '请输入用户名' }]}
+        <main className="login-form-panel">
+          <div className="login-form-inner">
+            <h2 className="login-title">欢迎登录</h2>
+            <p className="login-subtitle">请使用您的账号密码登录系统</p>
+            <Form
+              onFinish={onFinish}
+              size="large"
+              labelCol={{ flex: '4em' }}
+              wrapperCol={{ flex: 1 }}
             >
-              <Input prefix={<UserOutlined />} placeholder="请输入用户名" autoComplete="username" />
-            </Form.Item>
-            <Form.Item
-              name="password"
-              label="密码"
-              rules={[{ required: true, message: '请输入密码' }]}
-            >
-              <Input.Password prefix={<LockOutlined />} placeholder="请输入密码" autoComplete="current-password" />
-            </Form.Item>
-            <Form.Item>
-              <Button type="primary" htmlType="submit" loading={loading} block className="login-submit">
-                登录
-              </Button>
-            </Form.Item>
-          </Form>
-        </div>
-      </main>
+              <Form.Item
+                name="username"
+                label="用户名"
+                rules={[{ required: true, message: '请输入用户名' }]}
+              >
+                <Input prefix={<UserOutlined />} placeholder="请输入用户名" autoComplete="username" />
+              </Form.Item>
+              <Form.Item
+                name="password"
+                label="密码"
+                rules={[{ required: true, message: '请输入密码' }]}
+              >
+                <Input.Password prefix={<LockOutlined />} placeholder="请输入密码" autoComplete="current-password" />
+              </Form.Item>
+              <Form.Item>
+                <Button type="primary" htmlType="submit" loading={loading} block className="login-submit">
+                  登录
+                </Button>
+              </Form.Item>
+            </Form>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

@@ -5,7 +5,6 @@ import {
   UserOutlined,
   LogoutOutlined,
   IdcardOutlined,
-  AuditOutlined,
   TeamOutlined,
   FileTextOutlined,
   BookOutlined,
@@ -14,7 +13,9 @@ import {
   HistoryOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  DashboardOutlined,
 } from '@ant-design/icons';
+import BrandLogo from '../BrandLogo';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
 import useAuthStore from '../../store/auth';
 import { logout as logoutApi } from '../../api/auth';
@@ -55,18 +56,21 @@ const AppLayout = () => {
   const getMenuItems = (): MenuProps['items'] => {
     if (user?.role === 'admin') {
       return [
+        { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
         { key: '/users', icon: <TeamOutlined />, label: '用户管理' },
         { key: '/exams', icon: <FileTextOutlined />, label: '考试管理' },
       ];
     }
     if (user?.role === 'teacher') {
       return [
+        { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
         { key: '/courses', icon: <BookOutlined />, label: '课程管理' },
         { key: '/exams', icon: <FileTextOutlined />, label: '考试管理' },
         { key: '/grading', icon: <CheckSquareOutlined />, label: '阅卷管理' },
       ];
     }
     return [
+      { key: '/dashboard', icon: <DashboardOutlined />, label: '仪表盘' },
       { key: '/exams', icon: <FileSearchOutlined />, label: '考试列表' },
       { key: '/my-records', icon: <HistoryOutlined />, label: '我的记录' },
     ];
@@ -83,10 +87,8 @@ const AppLayout = () => {
         trigger={null}
       >
         <div className="app-brand">
-          <span className="app-brand-icon">
-            <AuditOutlined />
-          </span>
-          {!collapsed && <span className="app-brand-name">在线考试系统</span>}
+          <BrandLogo size={32} />
+          {!collapsed && <span className="app-brand-name">π考</span>}
         </div>
         <Menu
           theme="dark"
