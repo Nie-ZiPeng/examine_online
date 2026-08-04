@@ -2,6 +2,11 @@ import type { Dayjs } from 'dayjs';
 
 export type ExamStatus = 'draft' | 'published' | 'ongoing' | 'finished';
 
+export interface StudentOverride {
+  student_id: number;
+  action: 'include' | 'exclude';
+}
+
 export interface Exam {
   id: number;
   course_id: number;
@@ -29,6 +34,8 @@ export interface ExamInput {
   end_time: string;
   random_order: boolean;
   max_switch: number;
+  class_ids?: number[];
+  student_overrides?: StudentOverride[];
 }
 
 // 考试编辑页表单值（DatePicker 值，提交前 format 成字符串）

@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email?: string | null;
   phone?: string | null;
+  class_id?: number | null;
   is_active: boolean;
   created_at: string;
 }
