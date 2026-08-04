@@ -12,15 +12,13 @@ export const EXAM_CARD_COLORS: [string, string][] = [
 
 export type ExamDisplayStatus = 'not_started' | 'ongoing' | 'finished';
 
-const TIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
-
 export const getExamDisplayStatus = (
   exam: Pick<Exam, 'start_time' | 'end_time'>,
   now: Date = new Date()
 ): ExamDisplayStatus => {
-  const cur = dayjs(now).format(TIME_FORMAT);
-  if (cur < exam.start_time) return 'not_started';
-  if (cur > exam.end_time) return 'finished';
+  const cur = dayjs(now);
+  if (cur.isBefore(dayjs(exam.start_time))) return 'not_started';
+  if (cur.isAfter(dayjs(exam.end_time))) return 'finished';
   return 'ongoing';
 };
 

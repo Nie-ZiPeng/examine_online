@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import dayjs from 'dayjs';
 import { App, Button, Pagination } from 'antd';
 import { ClockCircleOutlined, CalendarOutlined, FileTextOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -86,7 +87,7 @@ const ExamList = () => {
                   <div className="exam-card-body">
                     <h3 className="exam-card-title">{exam.title}</h3>
                     <p className="exam-card-meta">
-                      <CalendarOutlined /> {exam.start_time} - {exam.end_time}
+                      <CalendarOutlined /> {dayjs(exam.start_time).format('YYYY-MM-DD HH:mm')} - {dayjs(exam.end_time).format('YYYY-MM-DD HH:mm')}
                     </p>
                     <p className="exam-card-meta">
                       <ClockCircleOutlined /> {exam.duration} 分钟 · 总分 {exam.total_score} · 及格 {exam.pass_score}
@@ -103,7 +104,7 @@ const ExamList = () => {
                         {displayStatus === 'ongoing' ? '继续考试' : displayStatus === 'finished' ? '已结束' : '开始考试'}
                       </Button>
                       <span className="exam-card-hint">
-                        {displayStatus === 'not_started' ? `${exam.start_time} 开考` : ''}
+                        {displayStatus === 'not_started' ? `${dayjs(exam.start_time).format('YYYY-MM-DD HH:mm')} 开考` : ''}
                       </span>
                     </div>
                   </div>

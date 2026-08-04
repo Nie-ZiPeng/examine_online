@@ -18,7 +18,7 @@ const makeExam = (overrides: Partial<Exam>): Exam => ({
   ...overrides,
 });
 
-const at = (t: string) => dayjs(t, 'YYYY-MM-DD HH:mm:ss').toDate();
+const at = (t: string) => dayjs(t).toDate();
 
 describe('getExamDisplayStatus', () => {
   const exam = makeExam({});
@@ -33,6 +33,25 @@ describe('getExamDisplayStatus', () => {
 
   it('结束后为已结束', () => {
     expect(getExamDisplayStatus(exam, at('2026-08-10 12:00:00'))).toBe('finished');
+  });
+});
+
+describe('getExamDisplayStatus (后端 ISO T 格式)', () => {
+  const exam = makeExam({
+    start_time: '2026-08-10T09:00:00',
+    end_time: '2026-08-10T11:00:00',
+  });
+
+  it('开始前为未开始', () => {
+    expect(getExamDisplayStatus(exam, at('2026-08-10T08:59:00'))).toBe('not_started');
+  });
+
+  it('进行中', () => {
+    expect(getExamDisplayStatus(exam, at('2026-08-10T09:30:00'))).toBe('ongoing');
+  });
+
+  it('结束后为已结束', () => {
+    expect(getExamDisplayStatus(exam, at('2026-08-10T12:00:00'))).toBe('finished');
   });
 });
 
