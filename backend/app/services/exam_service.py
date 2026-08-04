@@ -73,7 +73,7 @@ async def create_exam(db: AsyncSession, exam_data: dict):
     await _write_student_overrides(db, exam.id, overrides)
     await db.commit()
     await db.refresh(exam)
-    return exam
+    return await _attach_assignment_echo(db, exam)
 
 
 async def update_exam(db: AsyncSession, exam_id: int, exam_data: dict):

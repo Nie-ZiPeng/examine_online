@@ -67,7 +67,15 @@ PREPARE statement FROM @sql;
 EXECUTE statement;
 DEALLOCATE PREPARE statement;
 
-CREATE INDEX IF NOT EXISTS ix_users_class_id ON users (class_id);
+SET @sql = IF(
+    (SELECT COUNT(*) FROM information_schema.STATISTICS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND INDEX_NAME = 'ix_users_class_id') = 0,
+    'CREATE INDEX ix_users_class_id ON users (class_id)',
+    'SELECT 1'
+);
+PREPARE statement FROM @sql;
+EXECUTE statement;
+DEALLOCATE PREPARE statement;
 
 SET @sql = IF(
     (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
