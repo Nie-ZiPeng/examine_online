@@ -18,6 +18,8 @@ from app.api.questions import router as questions_router
 from app.api.exam_student import router as exam_student_router
 from app.api.grading import router as grading_router
 from app.api.statistics import router as statistics_router
+from app.api.admin_classes import router as admin_classes_router
+from app.api.admin_teacher_subjects import router as admin_teacher_subjects_router
 from app.workers.ai_grading_worker import run_worker
 
 setup_logging()
@@ -55,6 +57,8 @@ app.include_router(questions_router)
 app.include_router(exam_student_router)
 app.include_router(grading_router)
 app.include_router(statistics_router)
+app.include_router(admin_classes_router)
+app.include_router(admin_teacher_subjects_router)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
