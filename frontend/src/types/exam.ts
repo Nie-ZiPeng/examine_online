@@ -50,6 +50,8 @@ export interface ExamFormValues {
   start_time: Dayjs;
   end_time: Dayjs;
   random_order: boolean;
+  class_ids?: number[];
+  exclude_student_ids?: string[];
 }
 
 export interface ExamQuery {

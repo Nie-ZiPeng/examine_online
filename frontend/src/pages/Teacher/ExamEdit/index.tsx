@@ -11,11 +11,13 @@ import {
   getExam, createExam, updateExam, getExamQuestions, createQuestion, deleteQuestion,
 } from '../../../api/exams';
 import { getCourses } from '../../../api/courses';
+import { getClasses } from '../../../api/classes';
 import PageHeader from '../../../components/PageHeader';
 import ImportModal from '../../../components/ImportModal';
 import type { ExamFormValues } from '../../../types/exam';
 import type { ExamInput } from '../../../types/exam';
 import type { Course } from '../../../types/course';
+import type { Class } from '../../../types/class';
 import type { Question, QuestionType, QuestionFormValues, QuestionInput } from '../../../types/question';
 
 const { TextArea } = Input;
@@ -43,6 +45,7 @@ const ExamEdit = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [questionTotal, setQuestionTotal] = useState(0);
   const [questionPage, setQuestionPage] = useState(1);
   const [questionPageSize, setQuestionPageSize] = useState(10);
@@ -52,8 +55,12 @@ const ExamEdit = () => {
   const fetchData = async () => {
     if (isNew) {
       try {
-        const res = await getCourses({ page: 1, page_size: 100 });
-        setCourses(res.data.items || []);
+        const [coursesRes, classesRes] = await Promise.all([
+          getCourses({ page: 1, page_size: 100 }),
+          getClasses({ page: 1, page_size: 100 }),
+        ]);
+        setCourses(coursesRes.data.items || []);
+        setClasses(classesRes.data.items || []);
       } catch (error) {
         message.error('加载课程列表失败');
       }
@@ -79,6 +86,8 @@ const ExamEdit = () => {
         random_order: examData.random_order,
         max_switch: examData.max_switch,
       });
+      // 说明：ExamResponse 当前未返回 class_ids / student_overrides，
+      // 如需回显，可在后端 ExamResponse 增加 assigned_class_ids 字段后补充。
     } catch (error) {
       message.error('加载考试详情失败');
     } finally {
@@ -109,6 +118,10 @@ const ExamEdit = () => {
         end_time: values.end_time.format('YYYY-MM-DD HH:mm:ss'),
         random_order: values.random_order,
         max_switch: values.max_switch,
+        class_ids: (values.class_ids as number[]) || [],
+        student_overrides: ((values.exclude_student_ids as string[]) || [])
+          .map((v: string) => ({ student_id: Number(v), action: 'exclude' as const }))
+          .filter((o) => !Number.isNaN(o.student_id)),
       };
       if (isNew) {
         const created = await createExam({ ...payload, course_id: values.course_id as number });
@@ -277,6 +290,26 @@ const ExamEdit = () => {
             <Col span={12}>
               <Form.Item name="random_order" label="题目随机排序" valuePropName="checked" initialValue>
                 <Switch />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="class_ids" label="参加班级" tooltip="选择班级后，该班级所有学生自动参加；未选择任何班级时，所有学生均可参加（兼容旧考试）">
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="请选择参加考试的班级（可多选）"
+                  options={classes.map((c) => ({ value: c.id, label: c.name }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="exclude_student_ids" label="排除学生" tooltip="从已选班级中排除个别学生（按姓名搜索）">
+                <Select
+                  mode="tags"
+                  allowClear
+                  placeholder="可暂不设置"
+                  tokenSeparators={[',']}
+                />
               </Form.Item>
             </Col>
           </Row>
