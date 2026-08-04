@@ -6,6 +6,7 @@ from app.services.class_service import (
     create_class, get_classes, get_all_classes, update_class,
     delete_class, get_class_students,
 )
+from app.services.user_service import update_user
 
 
 @pytest.mark.asyncio
@@ -79,3 +80,30 @@ async def test_get_all_classes(db: AsyncSession):
     await create_class(db, "一班")
     await create_class(db, "二班")
     assert len(await get_all_classes(db)) == 2
+
+
+@pytest.mark.asyncio
+async def test_update_user_clears_class_id_with_explicit_none(db: AsyncSession):
+    class_ = await create_class(db, "班级C")
+    user = User(username="stu2", password_hash="x", role="student",
+                name="学生2", class_id=class_.id)
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    assert user.class_id == class_.id
+    updated = await update_user(db, user.id, {"class_id": None})
+    assert updated is not None
+    assert updated.class_id is None
+
+
+@pytest.mark.asyncio
+async def test_update_user_keeps_class_id_when_not_in_payload(db: AsyncSession):
+    class_ = await create_class(db, "班级D")
+    user = User(username="stu3", password_hash="x", role="student",
+                name="学生3", class_id=class_.id)
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    updated = await update_user(db, user.id, {"name": "新名字"})
+    assert updated.class_id == class_.id
+    assert updated.name == "新名字"

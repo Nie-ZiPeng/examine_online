@@ -151,3 +151,41 @@ async def test_get_exam_echoes_assignments(db: AsyncSession):
     resp = ExamResponse.model_validate(fetched)
     assert resp.assigned_class_ids == [class_.id]
     assert [o.model_dump() for o in resp.student_overrides] == [{"student_id": student.id, "action": "exclude"}]
+
+
+@pytest.mark.asyncio
+async def test_update_exam_returns_fresh_assignments(db: AsyncSession):
+    class_a = SchoolClass(name="A班")
+    class_b = SchoolClass(name="B班")
+    db.add_all([class_a, class_b])
+    await db.commit()
+    await db.refresh(class_a)
+    await db.refresh(class_b)
+    student = await _make_student(db, "s1", class_id=class_a.id)
+    exam = await _make_exam(
+        db, class_ids=[class_a.id],
+        student_overrides=[{"student_id": student.id, "action": "exclude"}],
+    )
+    updated = await update_exam(
+        db, exam.id,
+        {"class_ids": [class_b.id], "student_overrides": []},
+    )
+    assert updated is not None
+    assert updated.assigned_class_ids == [class_b.id]
+    assert updated.student_overrides == []
+    fetched = await get_exam(db, exam.id)
+    assert fetched.assigned_class_ids == [class_b.id]
+    assert fetched.student_overrides == []
+
+
+@pytest.mark.asyncio
+async def test_update_exam_dedupes_duplicate_class_ids(db: AsyncSession):
+    class_ = SchoolClass(name="一班")
+    db.add(class_)
+    await db.commit()
+    await db.refresh(class_)
+    exam = await _make_exam(db)
+    updated = await update_exam(db, exam.id, {"class_ids": [class_.id, class_.id]})
+    assert updated is not None
+    fetched = await get_exam(db, exam.id)
+    assert fetched.assigned_class_ids == [class_.id]
