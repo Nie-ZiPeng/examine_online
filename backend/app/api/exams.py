@@ -19,6 +19,13 @@ async def list_exams(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.role == "student":
+        from app.services.exam_service import get_student_eligible_exams
+        exams, total = await get_student_eligible_exams(
+            db, current_user.id, page, page_size, status
+        )
+        exams_data = [ExamResponse.model_validate(e).model_dump() for e in exams]
+        return paginated_response(exams_data, total, page, page_size)
     exams, total = await get_exams(db, course_id, status, page, page_size)
     exams_data = [ExamResponse.model_validate(e).model_dump() for e in exams]
     return paginated_response(exams_data, total, page, page_size)

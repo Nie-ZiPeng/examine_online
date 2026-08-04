@@ -32,7 +32,8 @@ async def create_user(db: AsyncSession, user_data: dict):
         role=user_data["role"],
         name=user_data["name"],
         email=user_data.get("email"),
-        phone=user_data.get("phone")
+        phone=user_data.get("phone"),
+        class_id=user_data.get("class_id") if user_data.get("role") == "student" else None
     )
     db.add(user)
     try:
