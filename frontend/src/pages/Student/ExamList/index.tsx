@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import dayjs from 'dayjs';
 import { App, Button, Pagination } from 'antd';
-import { ClockCircleOutlined, CalendarOutlined, FileTextOutlined } from '@ant-design/icons';
+import { ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getExams, startExam } from '../../../api/exams';
 import type { Exam } from '../../../types/exam';
