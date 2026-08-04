@@ -8,8 +8,8 @@ class ExamStudent(Base):
     __tablename__ = "exam_students"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    exam_id = Column(Integer, ForeignKey("exams.id"), nullable=False, index=True)
-    student_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    exam_id = Column(Integer, ForeignKey("exams.id", ondelete="CASCADE"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     action = Column(String(20), nullable=False, comment="include=额外添加, exclude=排除")
     created_at = Column(DateTime, server_default=func.now())
 

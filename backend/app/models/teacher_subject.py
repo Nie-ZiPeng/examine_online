@@ -8,8 +8,8 @@ class TeacherSubject(Base):
     __tablename__ = "teacher_subjects"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    teacher_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    subject_id = Column(Integer, ForeignKey("courses.id"), nullable=False, index=True)
+    teacher_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    subject_id = Column(Integer, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
     created_at = Column(DateTime, server_default=func.now())
 
     teacher = relationship("User", backref="teacher_subjects")

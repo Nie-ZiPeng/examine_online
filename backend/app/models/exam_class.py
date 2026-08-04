@@ -8,8 +8,8 @@ class ExamClass(Base):
     __tablename__ = "exam_classes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    exam_id = Column(Integer, ForeignKey("exams.id"), nullable=False, index=True)
-    class_id = Column(Integer, ForeignKey("classes.id"), nullable=False, index=True)
+    exam_id = Column(Integer, ForeignKey("exams.id", ondelete="CASCADE"), nullable=False, index=True)
+    class_id = Column(Integer, ForeignKey("classes.id", ondelete="CASCADE"), nullable=False, index=True)
     created_at = Column(DateTime, server_default=func.now())
 
     exam = relationship("Exam", backref="exam_classes")

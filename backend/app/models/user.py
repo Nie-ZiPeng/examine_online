@@ -14,7 +14,7 @@ class User(Base):
     email = Column(String(100))
     phone = Column(String(20))
     is_active = Column(Boolean, default=True)
-    class_id = Column(Integer, ForeignKey("classes.id"), nullable=True, index=True)
+    class_id = Column(Integer, ForeignKey("classes.id", ondelete="SET NULL"), nullable=True, index=True)
     school_class = relationship("SchoolClass", back_populates="students")
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
