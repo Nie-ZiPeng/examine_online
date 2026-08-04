@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { App, Table, Button } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+import React, { useState, useEffect, useCallback } from 'react';
+import { App, Button, Pagination } from 'antd';
+import { ClockCircleOutlined, CalendarOutlined, FileTextOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getExams, startExam } from '../../../api/exams';
 import type { Exam } from '../../../types/exam';
 import PageHeader from '../../../components/PageHeader';
-import PageCard from '../../../components/PageCard';
+import StatusTag from '../../../components/StatusTag';
+import EmptyState from '../../../components/EmptyState';
+import SkeletonGrid from '../../../components/SkeletonGrid';
+import { getExamDisplayStatus, getExamCardColor } from './utils';
+import './index.css';
 
 const ExamList = () => {
   const { message } = App.useApp();
@@ -25,67 +29,103 @@ const ExamList = () => {
     }
   };
 
-  const fetchExams = async (p: number, ps: number) => {
+  const fetchExams = useCallback(async (p: number, ps: number) => {
     setLoading(true);
     try {
       const res = await getExams({ status: 'published', page: p, page_size: ps });
       const items = res.data.items || [];
       setExams(items);
       setTotal(res.data.total || 0);
-      if (items.length === 0 && page > 1) setPage(page - 1);
+      if (items.length === 0 && p > 1) setPage(p - 1);
     } catch (error) {
       message.error('获取考试列表失败');
     } finally {
       setLoading(false);
     }
-  };
+  }, [message]);
 
   useEffect(() => {
     fetchExams(page, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize]);
-
-  const columns: ColumnsType<Exam> = [
-    { title: '考试标题', dataIndex: 'title', key: 'title' },
-    { title: '考试时长', dataIndex: 'duration', key: 'duration', render: (v: number) => `${v}分钟` },
-    { title: '总分', dataIndex: 'total_score', key: 'total_score' },
-    { title: '及格分', dataIndex: 'pass_score', key: 'pass_score' },
-    {
-      title: '考试时间',
-      key: 'time',
-      render: (_, record) =>
-        `${new Date(record.start_time).toLocaleString()} - ${new Date(record.end_time).toLocaleString()}`,
-    },
-    {
-      title: '操作',
-      key: 'action',
-      render: (_, record) => (
-        <Button type="primary" onClick={() => handleStart(record)}>
-          开始考试
-        </Button>
-      ),
-    },
-  ];
+  }, [page, pageSize, fetchExams]);
 
   return (
-    <div>
+    <div className="exam-list-page">
       <PageHeader title="考试列表" subtitle="选择一门考试开始作答" />
-      <PageCard>
-        <Table
-          columns={columns}
-          dataSource={exams}
-          loading={loading}
-          rowKey="id"
-          pagination={{
-            current: page,
-            pageSize,
-            total,
-            showSizeChanger: true,
-            showTotal: (t: number) => `共 ${t} 条`,
-            onChange: (p: number, ps: number) => { setPage(p); setPageSize(ps); },
-          }}
-        />
-      </PageCard>
+      {loading ? (
+        <SkeletonGrid count={6} columns={3} />
+      ) : exams.length === 0 ? (
+        <div className="exam-list-empty-card">
+          <EmptyState
+            title="暂无考试"
+            description="考试发布后会显示在这里"
+          />
+        </div>
+      ) : (
+        <>
+          <div className="exam-card-grid">
+            {exams.map((exam) => {
+              const displayStatus = getExamDisplayStatus(exam);
+              const [from, to] = getExamCardColor(exam.title);
+              const canStart = displayStatus !== 'finished';
+              return (
+                <div
+                  key={exam.id}
+                  className="exam-card"
+                  style={{ cursor: canStart ? 'pointer' : 'default' }}
+                  onClick={() => canStart && handleStart(exam)}
+                >
+                  <div className="exam-card-cover" style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}>
+                    <span className="exam-card-initial">{exam.title.slice(0, 1)}</span>
+                    <span className="exam-card-status">
+                      <StatusTag
+                        status={displayStatus}
+                        label={displayStatus === 'not_started' ? '未开始' : displayStatus === 'ongoing' ? '进行中' : '已结束'}
+                      />
+                    </span>
+                  </div>
+                  <div className="exam-card-body">
+                    <h3 className="exam-card-title">{exam.title}</h3>
+                    <p className="exam-card-meta">
+                      <CalendarOutlined /> {exam.start_time} - {exam.end_time}
+                    </p>
+                    <p className="exam-card-meta">
+                      <ClockCircleOutlined /> {exam.duration} 分钟 · 总分 {exam.total_score} · 及格 {exam.pass_score}
+                    </p>
+                    <div className="exam-card-footer">
+                      <Button
+                        type="primary"
+                        disabled={!canStart}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStart(exam);
+                        }}
+                      >
+                        {displayStatus === 'ongoing' ? '继续考试' : displayStatus === 'finished' ? '已结束' : '开始考试'}
+                      </Button>
+                      <span className="exam-card-hint">
+                        {displayStatus === 'not_started' ? `${exam.start_time} 开考` : ''}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="exam-list-pagination">
+            <Pagination
+              current={page}
+              pageSize={pageSize}
+              total={total}
+              showSizeChanger
+              showTotal={(t: number) => `共 ${t} 场考试`}
+              onChange={(p: number, ps: number) => {
+                setPage(p);
+                setPageSize(ps);
+              }}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };
