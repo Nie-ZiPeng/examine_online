@@ -1,0 +1,6 @@
+.skeleton-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.skeleton-grid-item { margin: 0; }
