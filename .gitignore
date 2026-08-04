@@ -10,6 +10,7 @@ backend/.env.*
 .omo/
 .opencode/
 .superpowers/
+.worktrees/
 .idea/
 .vscode/
 *.iml
