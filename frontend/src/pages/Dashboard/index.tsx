@@ -13,6 +13,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { getDashboard } from '../../api/statistics';
 import type { DashboardData } from '../../types/dashboard';
+import dayjs from 'dayjs';
 import useAuthStore from '../../store/auth';
 import StatusTag from '../../components/StatusTag';
 import EmptyState from '../../components/EmptyState';
@@ -118,7 +119,7 @@ const Dashboard = () => {
                     <div>
                       <p className="dashboard-list-title">{e.title}</p>
                       <p className="dashboard-list-meta">
-                        {new Date(e.start_time).toLocaleString()} · {e.duration} 分钟
+                        {dayjs(e.start_time).toLocaleString()} · {e.duration} 分钟
                       </p>
                     </div>
                     <Button type="primary" onClick={() => navigate('/exams')}>
@@ -141,7 +142,7 @@ const Dashboard = () => {
                     <div>
                       <p className="dashboard-list-title">{r.exam_title}</p>
                       <p className="dashboard-list-meta">
-                        得分 {r.score} / 及格 {r.pass_score} · {r.submit_time ? new Date(r.submit_time).toLocaleString() : ''}
+                        得分 {r.score} / 及格 {r.pass_score} · {r.submit_time ? dayjs(r.submit_time).toLocaleString() : ''}
                       </p>
                     </div>
                     <StatusTag status={r.score >= r.pass_score ? 'passed' : 'failed'} />
@@ -211,7 +212,7 @@ const Dashboard = () => {
                         <div>
                           <p className="dashboard-list-title">{e.title}</p>
                           <p className="dashboard-list-meta">
-                            {new Date(e.start_time).toLocaleString()}
+                            {dayjs(e.start_time).toLocaleString()}
                           </p>
                         </div>
                         <Button onClick={() => navigate('/exams')}>管理</Button>
@@ -284,7 +285,7 @@ const Dashboard = () => {
                         <div>
                           <p className="dashboard-list-title">{u.name}</p>
                           <p className="dashboard-list-meta">
-                            {u.username} · {new Date(u.created_at).toLocaleString()}
+                            {u.username} · {dayjs(u.created_at).toLocaleString()}
                           </p>
                         </div>
                         <Button onClick={() => navigate('/users')}>管理</Button>

@@ -116,8 +116,9 @@ async def get_dashboard_data(db: AsyncSession, user: User) -> dict:
                 "start_time": e.start_time,
                 "duration": e.duration,
             }
-            for e in available[:2]
-        ]
+            for e in available
+            if e.start_time > now
+        ][:2]
 
         recent_result = await db.execute(
             select(ExamRecord)
