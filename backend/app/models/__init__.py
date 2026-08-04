@@ -5,5 +5,12 @@ from app.models.question import Question
 from app.models.exam_record import ExamRecord
 from app.models.answer import Answer
 from app.models.ai_grading_task import AiGradingTask
+from app.models.class_ import SchoolClass
+from app.models.teacher_subject import TeacherSubject
+from app.models.exam_class import ExamClass
+from app.models.exam_student import ExamStudent
 
-__all__ = ["User", "Course", "Exam", "Question", "ExamRecord", "Answer", "AiGradingTask"]
+__all__ = [
+    "User", "Course", "Exam", "Question", "ExamRecord", "Answer",
+    "AiGradingTask", "SchoolClass", "TeacherSubject", "ExamClass", "ExamStudent",
+]
