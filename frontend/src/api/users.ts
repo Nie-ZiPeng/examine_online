@@ -9,6 +9,7 @@ export interface UserCreateInput {
   role: UserRole;
   email?: string;
   phone?: string;
+  class_id?: number | null;
 }
 
 export interface UserUpdateInput {
@@ -17,6 +18,7 @@ export interface UserUpdateInput {
   phone?: string;
   role?: UserRole;
   is_active?: boolean;
+  class_id?: number | null;
 }
 
 export const getUsers = (params?: Record<string, unknown>): Promise<ApiResponse<Paginated<User>>> =>

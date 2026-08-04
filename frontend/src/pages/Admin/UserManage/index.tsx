@@ -3,7 +3,9 @@ import { App, Table, Button, Modal, Form, Input, Select, Space, Popconfirm } fro
 import type { ColumnsType } from 'antd/es/table';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getUsers, createUser, updateUser, deleteUser } from '../../../api/users';
+import { getClasses } from '../../../api/classes';
 import type { User, UserRole } from '../../../types/user';
+import type { Class } from '../../../types/class';
 import EmptyState from '../../../components/EmptyState';
 import PageHeader from '../../../components/PageHeader';
 import PageCard from '../../../components/PageCard';
@@ -15,6 +17,7 @@ interface UserFormValues {
   role: UserRole;
   email?: string;
   phone?: string;
+  class_id?: number | null;
 }
 
 const UserManage = () => {
@@ -23,6 +26,7 @@ const UserManage = () => {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [form] = Form.useForm<UserFormValues>();
 
   const fetchUsers = useCallback(async () => {
@@ -41,6 +45,12 @@ const UserManage = () => {
     fetchUsers();
   }, [fetchUsers]);
 
+  useEffect(() => {
+    getClasses({ page: 1, page_size: 100 })
+      .then((res) => setClasses(res.data.items || []))
+      .catch(() => {});
+  }, []);
+
   const handleAdd = () => {
     setEditingUser(null);
     form.resetFields();
@@ -55,6 +65,7 @@ const UserManage = () => {
       role: record.role,
       email: record.email ?? undefined,
       phone: record.phone ?? undefined,
+      class_id: record.class_id ?? undefined,
     });
     setModalVisible(true);
   };
@@ -73,10 +84,10 @@ const UserManage = () => {
     try {
       const values = await form.validateFields();
       if (editingUser) {
-        await updateUser(editingUser.id, { name: values.name, email: values.email, phone: values.phone, role: values.role });
+        await updateUser(editingUser.id, { name: values.name, email: values.email, phone: values.phone, role: values.role, class_id: values.role === 'student' ? values.class_id : undefined });
         message.success('更新成功');
       } else {
-        await createUser({ username: values.username, password: values.password || '', name: values.name, role: values.role, email: values.email, phone: values.phone });
+        await createUser({ username: values.username, password: values.password || '', name: values.name, role: values.role, email: values.email, phone: values.phone, class_id: values.role === 'student' ? values.class_id : undefined });
         message.success('创建成功');
       }
       setModalVisible(false);
@@ -91,6 +102,12 @@ const UserManage = () => {
     { title: '用户名', dataIndex: 'username', key: 'username' },
     { title: '姓名', dataIndex: 'name', key: 'name' },
     { title: '角色', dataIndex: 'role', key: 'role' },
+    {
+      title: '班级',
+      key: 'class',
+      render: (_, record) =>
+        record.class_id ? classes.find((c) => c.id === record.class_id)?.name ?? record.class_id : '-',
+    },
     { title: '邮箱', dataIndex: 'email', key: 'email' },
     {
       title: '操作',
@@ -165,6 +182,19 @@ const UserManage = () => {
               <Select.Option value="teacher">老师</Select.Option>
               <Select.Option value="admin">管理员</Select.Option>
             </Select>
+          </Form.Item>
+          <Form.Item noStyle shouldUpdate={(prev, cur) => prev.role !== cur.role}>
+            {({ getFieldValue }) =>
+              getFieldValue('role') === 'student' ? (
+                <Form.Item name="class_id" label="所属班级">
+                  <Select
+                    allowClear
+                    placeholder="请选择班级"
+                    options={classes.map((c) => ({ value: c.id, label: c.name }))}
+                  />
+                </Form.Item>
+              ) : null
+            }
           </Form.Item>
           <Form.Item name="email" label="邮箱">
             <Input />
