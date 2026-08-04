@@ -33,6 +33,9 @@ def _normalize_answer(q_type: str, value) -> str:
     return v
 
 async def start_exam(db: AsyncSession, exam_id: int, student_id: int):
+    from app.services.exam_service import is_student_eligible
+    if not await is_student_eligible(db, exam_id, student_id):
+        return None, "你没有参加该考试的资格"
     # 检查考试是否存在
     exam = await db.get(Exam, exam_id)
     if not exam or exam.status != "published":
