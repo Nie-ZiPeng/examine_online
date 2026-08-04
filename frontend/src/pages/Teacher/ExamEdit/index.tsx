@@ -88,6 +88,8 @@ const ExamEdit = () => {
         random_order: examData.random_order,
         max_switch: examData.max_switch,
         class_ids: examData.assigned_class_ids ?? [],
+        // 编辑时仅回填 exclude 覆盖；编辑保存只会提交 exclude 列表，
+        // 通过 API 直接创建的 include 覆盖（额外添加的学生）在此会被丢弃
         exclude_student_ids: (examData.student_overrides ?? [])
           .filter((o) => o.action === 'exclude')
           .map((o) => String(o.student_id)),
@@ -307,11 +309,11 @@ const ExamEdit = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="exclude_student_ids" label="排除学生" tooltip="从已选班级中排除个别学生（按姓名搜索）">
+              <Form.Item name="exclude_student_ids" label="排除学生" tooltip="从已选班级中排除个别学生（输入学生ID，多个用逗号分隔）">
                 <Select
                   mode="tags"
                   allowClear
-                  placeholder="可暂不设置"
+                  placeholder="输入学生ID，多个用逗号分隔"
                   tokenSeparators={[',']}
                 />
               </Form.Item>

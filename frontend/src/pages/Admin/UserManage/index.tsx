@@ -83,11 +83,12 @@ const UserManage = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      const classId = values.role === 'student' ? (values.class_id ?? null) : null;
       if (editingUser) {
-        await updateUser(editingUser.id, { name: values.name, email: values.email, phone: values.phone, role: values.role, class_id: values.role === 'student' ? values.class_id : undefined });
+        await updateUser(editingUser.id, { name: values.name, email: values.email, phone: values.phone, role: values.role, class_id: classId });
         message.success('更新成功');
       } else {
-        await createUser({ username: values.username, password: values.password || '', name: values.name, role: values.role, email: values.email, phone: values.phone, class_id: values.role === 'student' ? values.class_id : undefined });
+        await createUser({ username: values.username, password: values.password || '', name: values.name, role: values.role, email: values.email, phone: values.phone, class_id: classId });
         message.success('创建成功');
       }
       setModalVisible(false);
