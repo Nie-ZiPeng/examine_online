@@ -21,6 +21,8 @@ export interface Exam {
   max_switch: number;
   status: ExamStatus;
   created_at: string;
+  assigned_class_ids?: number[];
+  student_overrides?: StudentOverride[];
 }
 
 export interface ExamInput {

@@ -8,9 +8,10 @@ from app.models.exam_class import ExamClass
 from app.models.exam_student import ExamStudent
 from app.models.user import User
 from app.services.exam_service import (
-    create_exam, update_exam, is_student_eligible,
+    create_exam, update_exam, get_exam, is_student_eligible,
     get_student_eligible_exams,
 )
+from app.schemas.exam import ExamResponse
 
 
 async def _make_student(db: AsyncSession, username: str, class_id=None) -> User:
@@ -131,3 +132,22 @@ async def test_get_student_eligible_exams_pagination(db: AsyncSession):
     exams, total = await get_student_eligible_exams(db, student.id, page=1, page_size=2)
     assert total == 3
     assert len(exams) == 2
+
+
+@pytest.mark.asyncio
+async def test_get_exam_echoes_assignments(db: AsyncSession):
+    class_ = SchoolClass(name="一班")
+    db.add(class_)
+    await db.commit()
+    await db.refresh(class_)
+    student = await _make_student(db, "s1", class_id=class_.id)
+    exam = await _make_exam(
+        db, class_ids=[class_.id],
+        student_overrides=[{"student_id": student.id, "action": "exclude"}],
+    )
+    fetched = await get_exam(db, exam.id)
+    assert fetched.assigned_class_ids == [class_.id]
+    assert fetched.student_overrides == [{"student_id": student.id, "action": "exclude"}]
+    resp = ExamResponse.model_validate(fetched)
+    assert resp.assigned_class_ids == [class_.id]
+    assert [o.model_dump() for o in resp.student_overrides] == [{"student_id": student.id, "action": "exclude"}]

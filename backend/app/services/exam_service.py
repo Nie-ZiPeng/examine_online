@@ -24,7 +24,20 @@ async def get_exams(db: AsyncSession, course_id: int = None, status: str = None,
 
 async def get_exam(db: AsyncSession, exam_id: int):
     result = await db.execute(select(Exam).where(Exam.id == exam_id))
-    return result.scalar_one_or_none()
+    exam = result.scalar_one_or_none()
+    if exam:
+        class_result = await db.execute(
+            select(ExamClass.class_id).where(ExamClass.exam_id == exam_id)
+        )
+        exam.assigned_class_ids = list(class_result.scalars().all())
+        override_result = await db.execute(
+            select(ExamStudent).where(ExamStudent.exam_id == exam_id)
+        )
+        exam.student_overrides = [
+            {"student_id": row.student_id, "action": row.action}
+            for row in override_result.scalars().all()
+        ]
+    return exam
 
 
 def _pop_assignment_keys(exam_data: dict) -> Tuple[list, list]:

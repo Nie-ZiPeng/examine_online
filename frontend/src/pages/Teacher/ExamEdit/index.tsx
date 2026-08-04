@@ -62,19 +62,21 @@ const ExamEdit = () => {
         setCourses(coursesRes.data.items || []);
         setClasses(classesRes.data.items || []);
       } catch (error) {
-        message.error('加载课程列表失败');
+        message.error('加载课程或班级列表失败');
       }
       return;
     }
     setLoading(true);
     try {
-      const [examRes, questionsRes] = await Promise.all([
+      const [examRes, questionsRes, classesRes] = await Promise.all([
         getExam(Number(examId)),
         getExamQuestions(Number(examId), { page: questionPage, page_size: questionPageSize }),
+        getClasses({ page: 1, page_size: 100 }),
       ]);
       const examData = examRes.data;
       setQuestions(questionsRes.data.items || []);
       setQuestionTotal(questionsRes.data.total || 0);
+      setClasses(classesRes.data.items || []);
       examForm.setFieldsValue({
         title: examData.title,
         description: examData.description ?? undefined,
@@ -85,9 +87,11 @@ const ExamEdit = () => {
         end_time: dayjs(examData.end_time),
         random_order: examData.random_order,
         max_switch: examData.max_switch,
+        class_ids: examData.assigned_class_ids ?? [],
+        exclude_student_ids: (examData.student_overrides ?? [])
+          .filter((o) => o.action === 'exclude')
+          .map((o) => String(o.student_id)),
       });
-      // 说明：ExamResponse 当前未返回 class_ids / student_overrides，
-      // 如需回显，可在后端 ExamResponse 增加 assigned_class_ids 字段后补充。
     } catch (error) {
       message.error('加载考试详情失败');
     } finally {
