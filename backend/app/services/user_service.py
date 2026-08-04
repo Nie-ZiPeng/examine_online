@@ -50,7 +50,9 @@ async def update_user(db: AsyncSession, user_id: int, user_data: dict):
         return None
 
     for key, value in user_data.items():
-        if value is not None:
+        if key == "class_id":
+            setattr(user, key, value)
+        elif value is not None:
             setattr(user, key, value)
 
     await db.commit()

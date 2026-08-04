@@ -8,6 +8,20 @@ from app.models.answer import Answer
 from app.models.user import User
 from app.models.ai_grading_task import AiGradingTask
 
+
+async def get_exam_id_by_record(db: AsyncSession, record_id: int):
+    result = await db.execute(select(ExamRecord.exam_id).where(ExamRecord.id == record_id))
+    return result.scalar_one_or_none()
+
+
+async def get_exam_id_by_answer(db: AsyncSession, answer_id: int):
+    result = await db.execute(
+        select(ExamRecord.exam_id)
+        .join(Answer, Answer.record_id == ExamRecord.id)
+        .where(Answer.id == answer_id)
+    )
+    return result.scalar_one_or_none()
+
 async def get_exam_records(db: AsyncSession, exam_id: int, page: int = 1, page_size: int = 10):
     query = select(ExamRecord).where(ExamRecord.exam_id == exam_id).order_by(ExamRecord.submit_time.desc())
     count_query = select(func.count()).select_from(query.subquery())

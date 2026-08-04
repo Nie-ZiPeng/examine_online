@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from app.database import get_db
 from app.schemas.exam import ExamCreate, ExamUpdate, ExamResponse
-from app.services.exam_service import get_exams, get_exam, create_exam, update_exam, publish_exam, delete_exam
+from app.services.exam_service import get_exams, get_exam, create_exam, update_exam, publish_exam, delete_exam, get_teacher_exams
+from app.services.teacher_subject_service import can_teacher_manage_exam, can_teacher_manage_subject
 from app.utils.deps import get_current_user, require_role
 from app.utils.response import success_response, paginated_response
 from app.models.user import User
@@ -26,6 +27,12 @@ async def list_exams(
         )
         exams_data = [ExamResponse.model_validate(e).model_dump() for e in exams]
         return paginated_response(exams_data, total, page, page_size)
+    if current_user.role == "teacher":
+        exams, total = await get_teacher_exams(
+            db, current_user.id, status, page, page_size
+        )
+        exams_data = [ExamResponse.model_validate(e).model_dump() for e in exams]
+        return paginated_response(exams_data, total, page, page_size)
     exams, total = await get_exams(db, course_id, status, page, page_size)
     exams_data = [ExamResponse.model_validate(e).model_dump() for e in exams]
     return paginated_response(exams_data, total, page, page_size)
@@ -36,6 +43,10 @@ async def create_new_exam(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    if current_user.role == "teacher" and not await can_teacher_manage_subject(
+        db, current_user.id, exam_data.course_id
+    ):
+        raise HTTPException(status_code=403, detail="你未被分配该学科")
     exam = await create_exam(db, exam_data.model_dump())
     return success_response(data=ExamResponse.model_validate(exam).model_dump())
 
@@ -57,6 +68,10 @@ async def update_exam_info(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    if current_user.role == "teacher" and not await can_teacher_manage_exam(
+        db, current_user.id, exam_id
+    ):
+        raise HTTPException(status_code=403, detail="无权管理该考试")
     exam = await update_exam(db, exam_id, exam_data.model_dump(exclude_unset=True))
     if not exam:
         raise HTTPException(status_code=404, detail="考试不存在")
@@ -68,6 +83,10 @@ async def publish_exam_action(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    if current_user.role == "teacher" and not await can_teacher_manage_exam(
+        db, current_user.id, exam_id
+    ):
+        raise HTTPException(status_code=403, detail="无权管理该考试")
     exam = await publish_exam(db, exam_id)
     if not exam:
         raise HTTPException(status_code=404, detail="考试不存在")
@@ -79,6 +98,10 @@ async def delete_exam_info(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    if current_user.role == "teacher" and not await can_teacher_manage_exam(
+        db, current_user.id, exam_id
+    ):
+        raise HTTPException(status_code=403, detail="无权管理该考试")
     success = await delete_exam(db, exam_id)
     if not success:
         raise HTTPException(status_code=404, detail="考试不存在")

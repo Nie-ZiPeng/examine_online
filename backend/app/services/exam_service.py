@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.exam import Exam
 from app.models.exam_class import ExamClass
 from app.models.exam_student import ExamStudent
+from app.models.teacher_subject import TeacherSubject
 from app.models.user import User
 
 
@@ -22,21 +23,38 @@ async def get_exams(db: AsyncSession, course_id: int = None, status: str = None,
     return result.scalars().all(), total
 
 
+async def get_teacher_exams(db: AsyncSession, teacher_id: int, status: str = None,
+                            page: int = 1, page_size: int = 10):
+    assigned = select(TeacherSubject.subject_id).where(TeacherSubject.teacher_id == teacher_id)
+    query = select(Exam).where(Exam.course_id.in_(assigned))
+    if status:
+        query = query.where(Exam.status == status)
+    count_query = select(func.count()).select_from(query.subquery())
+    total = (await db.execute(count_query)).scalar_one()
+    result = await db.execute(query.offset((page - 1) * page_size).limit(page_size))
+    return result.scalars().all(), total
+
+
+async def _attach_assignment_echo(db: AsyncSession, exam: Exam):
+    class_result = await db.execute(
+        select(ExamClass.class_id).where(ExamClass.exam_id == exam.id)
+    )
+    exam.assigned_class_ids = list(class_result.scalars().all())
+    override_result = await db.execute(
+        select(ExamStudent).where(ExamStudent.exam_id == exam.id)
+    )
+    exam.student_overrides = [
+        {"student_id": row.student_id, "action": row.action}
+        for row in override_result.scalars().all()
+    ]
+    return exam
+
+
 async def get_exam(db: AsyncSession, exam_id: int):
     result = await db.execute(select(Exam).where(Exam.id == exam_id))
     exam = result.scalar_one_or_none()
     if exam:
-        class_result = await db.execute(
-            select(ExamClass.class_id).where(ExamClass.exam_id == exam_id)
-        )
-        exam.assigned_class_ids = list(class_result.scalars().all())
-        override_result = await db.execute(
-            select(ExamStudent).where(ExamStudent.exam_id == exam_id)
-        )
-        exam.student_overrides = [
-            {"student_id": row.student_id, "action": row.action}
-            for row in override_result.scalars().all()
-        ]
+        await _attach_assignment_echo(db, exam)
     return exam
 
 
@@ -75,11 +93,11 @@ async def update_exam(db: AsyncSession, exam_id: int, exam_data: dict):
         await _write_student_overrides(db, exam_id, overrides)
     await db.commit()
     await db.refresh(exam)
-    return exam
+    return await _attach_assignment_echo(db, exam)
 
 
 async def _write_class_assignments(db: AsyncSession, exam_id: int, class_ids: List[int]):
-    for class_id in class_ids:
+    for class_id in dict.fromkeys(class_ids):
         db.add(ExamClass(exam_id=exam_id, class_id=class_id))
 
 

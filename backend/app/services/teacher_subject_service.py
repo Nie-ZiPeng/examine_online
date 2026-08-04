@@ -62,10 +62,14 @@ async def can_teacher_manage_exam(db: AsyncSession, teacher_id: int, exam_id: in
     exam = await db.get(Exam, exam_id)
     if not exam:
         return False
+    return await can_teacher_manage_subject(db, teacher_id, exam.course_id)
+
+
+async def can_teacher_manage_subject(db: AsyncSession, teacher_id: int, course_id: int) -> bool:
     result = await db.execute(
         select(TeacherSubject).where(
             TeacherSubject.teacher_id == teacher_id,
-            TeacherSubject.subject_id == exam.course_id,
+            TeacherSubject.subject_id == course_id,
         )
     )
     return result.scalar_one_or_none() is not None

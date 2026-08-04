@@ -1,11 +1,11 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
 
 
 class StudentOverride(BaseModel):
     student_id: int
-    action: str  # "include"=额外添加, "exclude"=排除
+    action: Literal["include", "exclude"]  # "include"=额外添加, "exclude"=排除
 
 
 class ExamBase(BaseModel):

@@ -2,13 +2,20 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.answer import GradeRequest
-from app.services.grading_service import get_exam_records, get_record_answers, grade_answer, finalize_record
+from app.services.grading_service import get_exam_records, get_record_answers, grade_answer, finalize_record, get_exam_id_by_record, get_exam_id_by_answer
 from app.services.ai_grading_service import retry_ai_grading_task
+from app.services.teacher_subject_service import can_teacher_manage_exam
 from app.utils.deps import get_current_user, require_role
 from app.utils.response import success_response, paginated_response
 from app.models.user import User
 
 router = APIRouter(tags=["阅卷管理"])
+
+async def _ensure_teacher_can_manage_exam(db: AsyncSession, current_user: User, exam_id: int):
+    if current_user.role == "teacher" and not await can_teacher_manage_exam(
+        db, current_user.id, exam_id
+    ):
+        raise HTTPException(status_code=403, detail="无权管理该考试")
 
 @router.get("/api/exams/{exam_id}/records")
 async def list_exam_records(
@@ -18,6 +25,7 @@ async def list_exam_records(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    await _ensure_teacher_can_manage_exam(db, current_user, exam_id)
     records, total = await get_exam_records(db, exam_id, page, page_size)
     return paginated_response(records, total, page, page_size)
 
@@ -27,6 +35,10 @@ async def list_record_answers(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    exam_id = await get_exam_id_by_record(db, record_id)
+    if exam_id is None:
+        raise HTTPException(status_code=404, detail="记录不存在")
+    await _ensure_teacher_can_manage_exam(db, current_user, exam_id)
     answers = await get_record_answers(db, record_id)
     return success_response(data=answers)
 
@@ -37,6 +49,10 @@ async def grade_single_answer(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    exam_id = await get_exam_id_by_answer(db, answer_id)
+    if exam_id is None:
+        raise HTTPException(status_code=404, detail="答案不存在")
+    await _ensure_teacher_can_manage_exam(db, current_user, exam_id)
     answer = await grade_answer(
         db,
         answer_id,
@@ -55,6 +71,10 @@ async def retry_ai_grading(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"])),
 ):
+    exam_id = await get_exam_id_by_answer(db, answer_id)
+    if exam_id is None:
+        raise HTTPException(status_code=404, detail="答案不存在")
+    await _ensure_teacher_can_manage_exam(db, current_user, exam_id)
     task = await retry_ai_grading_task(db, answer_id)
     if not task:
         raise HTTPException(status_code=409, detail="仅失败的 AI 评分任务可重试")
@@ -66,6 +86,10 @@ async def finalize_record_action(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    exam_id = await get_exam_id_by_record(db, record_id)
+    if exam_id is None:
+        raise HTTPException(status_code=404, detail="记录不存在")
+    await _ensure_teacher_can_manage_exam(db, current_user, exam_id)
     record = await finalize_record(db, record_id)
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在")
